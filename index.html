@@ -1343,16 +1343,19 @@ let stepData = {}; // เก็บไฟล์แต่ละ step
 
 function loadFeature(){
 
-  google.script.run
-  .withSuccessHandler(function(data){
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getFeatureData")
+    .then(res => res.json())
+    .then(function(data){
 
-    featureData = data;
+      featureData = data;
 
-    renderFeature();      // 👈 วาด UI
-    renderFeatureForm();  // 👈 admin form
+      renderFeature();      
+      renderFeatureForm();  
 
-  })
-  .getFeatureData();
+    })
+    .catch(err => {
+      console.error("loadFeature error:", err);
+    });
 
 }
 
@@ -1559,15 +1562,29 @@ function saveFeature(){
     desc: document.getElementById("desc"+i).value
   }));
 
-  google.script.run
-  .withSuccessHandler(function(){
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "saveFeatureData",
+      data: newData
+    }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(res => res.json())
+  .then(function(){
 
     showMessage("บันทึกแล้ว");
 
-    loadFeature(); // 🔥 รีโหลดใหม่
+    loadFeature();
 
   })
-  .saveFeatureData(newData);
+  .catch(err => {
+    console.error("saveFeature error:", err);
+    showMessage("บันทึกไม่สำเร็จ");
+  });
+
 }
 
 // ====== LOAD KPI ======
@@ -1575,32 +1592,43 @@ function loadKPI(index){
 
   let kpi = KPI_LIST[index];
 
-let typeMap = {
-  "s_rlu_lab_hba1c_1year": "A1C",
-  "s_rlu_lab_ldl_1year": "LDL",
-  "s_rlu_lab_creatinine_1year": "CRE"
-};
+  let typeMap = {
+    "s_rlu_lab_hba1c_1year": "A1C",
+    "s_rlu_lab_ldl_1year": "LDL",
+    "s_rlu_lab_creatinine_1year": "CRE"
+  };
 
-let type = typeMap[kpi.table];
+  let type = typeMap[kpi.table];
 
-if(type){
-  google.script.run
-    .withSuccessHandler(function(data){
-      renderChart(data, kpi.title, kpi.target);
-    })
-    .getKPIData(type);
-}else{
-  google.script.run
-    .withSuccessHandler(function(data){
-      renderChart(data, kpi.title, kpi.target);
-    })
-    .getMOPHKPI(kpi.table);
-}
+  if(type){
+
+    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=" + type)
+      .then(res => res.json())
+      .then(function(data){
+        renderChart(data, kpi.title, kpi.target);
+      })
+      .catch(err => {
+        console.error("loadKPI error:", err);
+      });
+
+  }else{
+
+    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=" + kpi.table)
+      .then(res => res.json())
+      .then(function(data){
+        renderChart(data, kpi.title, kpi.target);
+      })
+      .catch(err => {
+        console.error("loadKPI error:", err);
+      });
+
+  }
 }
 
 function uploadKPI(type){
 
-document.getElementById("kpiAll").style.display = "none";
+  document.getElementById("kpiAll").style.display = "none";
+
   let file = document.getElementById("kpiCsv").files[0];
 
   if(!file){
@@ -1614,28 +1642,40 @@ document.getElementById("kpiAll").style.display = "none";
 
     let text = e.target.result;
 
-    google.script.run
-.withSuccessHandler(()=>{
-  showMessage("อัปเดต " + type + " สำเร็จ");
+    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "saveKPIFromCSV",
+        text: text,
+        type: type
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(res => res.json())
+    .then(()=>{
 
-  // 🔥 โหลดเฉพาะกราฟที่กำลังดูอยู่
-  let val = document.getElementById("kpiSelect").value;
+      showMessage("อัปเดต " + type + " สำเร็จ");
 
-  // if(val !== "all"){
-  //   loadKPI(parseInt(val));
-  // }
+      let val = document.getElementById("kpiSelect").value;
 
-if(val == "ct_ratio"){
-  loadCtRatioData();
-}else if(val !== "all" && val !== "custom"){
-  loadKPI(parseInt(val));
-}
+      if(val == "ct_ratio"){
+        loadCtRatioData();
+      }else if(val !== "all" && val !== "custom"){
+        loadKPI(parseInt(val));
+      }
 
-})
-      .saveKPIFromCSV(text, type);
+    })
+    .catch(err => {
+      console.error("uploadKPI error:", err);
+      showMessage("อัปเดตไม่สำเร็จ");
+    });
 
   };
+
   loadHomeSummary();
+
   reader.readAsText(file);
 }
 
@@ -1794,7 +1834,7 @@ function showKPIView(mode){
 
 //โชว์กราฟทั้งหมด
 function loadAllKPI(){
-console.log("LOAD ALL KPI CALLED 🔥"); // 👈 
+console.log("LOAD ALL KPI CALLED 🔥"); 
 summaryRendered = false;
 
   summaryHTML = "";
@@ -1807,14 +1847,13 @@ summaryRendered = false;
   document.getElementById("kpiSummary").innerHTML = "";
 
   let count = 0;
-  let total = KPI_LIST.length + 1; // ✅ KPI + custom summary
+  let total = KPI_LIST.length + 1;
 
-  // layout
   container.style.display = "flex";
   container.style.flexWrap = "wrap";
   container.style.gap = "20px";
 
-  // ===== สร้าง DOM =====
+  // ===== DOM =====
   KPI_LIST.forEach((kpi, index)=>{
 
     let div = document.createElement("div");
@@ -1836,55 +1875,58 @@ summaryRendered = false;
   });
 
   // ===== KPI API =====
- KPI_LIST.forEach((kpi, index)=>{
+  KPI_LIST.forEach((kpi, index)=>{
 
-  let typeMap = {
-    "s_rlu_lab_hba1c_1year": "A1C",
-    "s_rlu_lab_ldl_1year": "LDL",
-    "s_rlu_lab_creatinine_1year": "CRE"
-  };
+    let typeMap = {
+      "s_rlu_lab_hba1c_1year": "A1C",
+      "s_rlu_lab_ldl_1year": "LDL",
+      "s_rlu_lab_creatinine_1year": "CRE"
+    };
 
-  let type = typeMap[kpi.table];
+    let type = typeMap[kpi.table];
 
-  let runner = google.script.run
-    .withSuccessHandler(function(data){
+    let url;
 
-      renderChartMulti(data, kpi.title, kpi.target, index);
-      renderSummary(data, kpi.title, kpi.target);
+    if(type){
+      url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=" + type;
+    }else{
+      url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=" + kpi.table;
+    }
 
-      count++;
+    fetch(url)
+      .then(res => res.json())
+      .then(function(data){
 
-      if(count === total){
-        renderSummaryDashboard();
-      }
+        renderChartMulti(data, kpi.title, kpi.target, index);
+        renderSummary(data, kpi.title, kpi.target);
 
-    });
+        count++;
 
-  if(type){
-    runner.getKPIData(type);   // 🔥 ใช้ CSV (3 ตัวปีละครั้ง)
-  }else{
-    runner.getMOPHKPI(kpi.table); // 🔥 ใช้ HDC (ตัวอื่น)
-  }
+        if(count === total){
+          renderSummaryDashboard();
+        }
 
-});
+      })
+      .catch(err => console.error("KPI error:", err));
 
-  // ===== ✅ CUSTOM SUMMARY =====
-google.script.run
-.withSuccessHandler(function(data){
+  });
 
-  renderCustomSummaryFromSheet(data); // ✅ ถูกต้อง
+  // ===== CUSTOM SUMMARY =====
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  .then(res => res.json())
+  .then(function(data){
 
-  count++;
+    renderCustomSummaryFromSheet(data);
 
-  if(count === total){
-    renderSummaryDashboard();
-  }
+    count++;
 
-})
-.getCustomKPI();
+    if(count === total){
+      renderSummaryDashboard();
+    }
 
+  });
 
-  // ===== CT RATIO GRAPH IN ALL =====
+  // ===== CT RATIO =====
   let ctDiv = document.createElement("div");
   ctDiv.style.background = "white";
   ctDiv.style.padding = "15px";
@@ -1903,13 +1945,10 @@ google.script.run
 
   container.appendChild(ctDiv);
 
-  google.script.run
-    .withSuccessHandler(renderCtRatioAllChart)
-    .withFailureHandler(function(err){
-      console.error(err);
-    })
-    .getCtRatioPayload();
-
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCtRatio")
+    .then(res => res.json())
+    .then(renderCtRatioAllChart)
+    .catch(err => console.error(err));
 
   // ===== CUSTOM GRAPH =====
   let div = document.createElement("div");
@@ -1929,9 +1968,9 @@ google.script.run
 
   container.appendChild(div);
 
-  // ===== โหลด custom graph =====
-  google.script.run
-  .withSuccessHandler(function(data){
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  .then(res => res.json())
+  .then(function(data){
 
     const monthOrder = {
       "มค":1,"กพ":2,"มีค":3,"เมย":4,
@@ -1983,13 +2022,14 @@ google.script.run
         }
       }
     });
-        setTimeout(()=>{
-  if(sessionStorage.getItem("page") === "home"){
-    renderSummaryDashboard();
-  }
-},800);
-  })
-  .getCustomKPI();
+
+    setTimeout(()=>{
+      if(sessionStorage.getItem("page") === "home"){
+        renderSummaryDashboard();
+      }
+    },800);
+
+  });
 
 }
 
@@ -2260,16 +2300,26 @@ let data = {
   direction: "MORE"
 };
 
-google.script.run
-.withSuccessHandler(function(res){
-  showMessage("บันทึกสำเร็จ"); // ✅ เปลี่ยนตรงนี้
-  loadCustomData(); // 👈 เพิ่มข้อนี้ไปเลย (ข้อ 2)
+fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
+  method: "POST",
+  body: JSON.stringify({
+    action: "saveCustomKPI",
+    data: data
+  }),
+  headers: {
+    "Content-Type": "application/json"
+  }
 })
-.withFailureHandler(function(err){
-  showMessage("บันทึกไม่สำเร็จ"); // ✅ เปลี่ยนตรงนี้
-  loadCustomData(); // 👈 เพิ่มข้อนี้ไปเลย (ข้อ 2)
+.then(res => res.json())
+.then(function(res){
+  showMessage("บันทึกสำเร็จ");
+  loadCustomData();
 })
-.saveCustomKPI(data);
+.catch(function(err){
+  console.error(err);
+  showMessage("บันทึกไม่สำเร็จ");
+  loadCustomData();
+});
 
 }
 
@@ -2368,8 +2418,9 @@ options:{
 //โหลดจากชีทมาแสดง
 function loadCustomData(){
 
-google.script.run
-.withSuccessHandler(function(data){
+fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+.then(res => res.json())
+.then(function(data){
 
 customData = [];
 
@@ -2420,7 +2471,10 @@ setTimeout(()=>{
 },200);
 
 })
-.getCustomKPI();
+.catch(err=>{
+  console.error(err);
+  showMessage("โหลดข้อมูลไม่สำเร็จ");
+});
 
 }
 
@@ -2621,47 +2675,64 @@ function loadHomeSummary(){
     }
   }
 
-KPI_LIST.forEach((kpi)=>{
+  KPI_LIST.forEach((kpi)=>{
 
-  let typeMap = {
-    "s_rlu_lab_hba1c_1year": "A1C",
-    "s_rlu_lab_ldl_1year": "LDL",
-    "s_rlu_lab_creatinine_1year": "CRE"
-  };
+    let typeMap = {
+      "s_rlu_lab_hba1c_1year": "A1C",
+      "s_rlu_lab_ldl_1year": "LDL",
+      "s_rlu_lab_creatinine_1year": "CRE"
+    };
 
-  let type = typeMap[kpi.table];
+    let type = typeMap[kpi.table];
 
-  if(type){
-    // ✅ ใช้ข้อมูลที่อัปโหลด
-    google.script.run
-    .withSuccessHandler(function(data){
+    // ===== 🔥 CASE 1: CSV KPI =====
+    if(type){
 
-      renderSummary(data, kpi.title, kpi.target);
+      fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=${type}`)
+      .then(res => res.json())
+      .then(function(data){
 
-      count++;
-      checkDone();
+        renderSummary(data, kpi.title, kpi.target);
 
-    })
-    .getKPIData(type);
+        count++;
+        checkDone();
 
-  }else{
-    // ✅ KPI อื่นใช้ HDC เหมือนเดิม
-    google.script.run
-    .withSuccessHandler(function(data){
+      })
+      .catch(err=>{
+        console.error(err);
+        count++;
+        checkDone();
+      });
 
-      renderSummary(data, kpi.title, kpi.target);
+    }
 
-      count++;
-      checkDone();
+    // ===== 🔥 CASE 2: HDC KPI =====
+    else{
 
-    })
-    .getMOPHKPI(kpi.table);
-  }
+      fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=${kpi.table}`)
+      .then(res => res.json())
+      .then(function(data){
 
-});
+        renderSummary(data, kpi.title, kpi.target);
 
-  google.script.run
-  .withSuccessHandler(function(data){
+        count++;
+        checkDone();
+
+      })
+      .catch(err=>{
+        console.error(err);
+        count++;
+        checkDone();
+      });
+
+    }
+
+  });
+
+  // ===== 🔥 CUSTOM KPI =====
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  .then(res => res.json())
+  .then(function(data){
 
     renderCustomSummaryFromSheet(data);
 
@@ -2669,7 +2740,11 @@ KPI_LIST.forEach((kpi)=>{
     checkDone();
 
   })
-  .getCustomKPI();
+  .catch(err=>{
+    console.error(err);
+    count++;
+    checkDone();
+  });
 
 }
 
@@ -2772,7 +2847,9 @@ function openStep(step){
 
   currentStep = step;
 
-  google.script.run.withSuccessHandler(function(files){
+  fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getStepFiles&step=${step}`)
+  .then(res => res.json())
+  .then(function(files){
 
     let box = document.getElementById("stepFiles");
     box.innerHTML = "";
@@ -2798,7 +2875,12 @@ function openStep(step){
 
     document.getElementById("stepModal").style.display="flex";
 
-  }).getStepFiles(step);
+  })
+  .catch(err=>{
+    console.error(err);
+    showMessage("โหลดไฟล์ไม่สำเร็จ");
+  });
+
 }
 
 
@@ -2833,15 +2915,26 @@ function saveStepFiles(){
 
   console.log("DATA:", arr);
 
-  google.script.run
-    .withSuccessHandler(function(res){
-      console.log("SAVE SUCCESS", res);
-      openStep(currentStep);
-    })
-    .withFailureHandler(function(err){
-      console.log("SAVE ERROR", err);
-    })
-    .saveStepFilesToSheet(currentStep, arr);
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "saveStepFilesToSheet",
+      step: currentStep,
+      data: arr
+    }),
+    headers:{
+    "Content-Type":"application/json"
+  }
+  })
+  .then(res => res.json())
+  .then(function(res){
+    console.log("SAVE SUCCESS", res);
+    openStep(currentStep);
+  })
+  .catch(function(err){
+    console.log("SAVE ERROR", err);
+  });
+
 }
 
 function closeModal(){
@@ -2889,8 +2982,19 @@ type:file.type,
 data:e.target.result.split(",")[1]
 };
 
-google.script.run
-.withSuccessHandler(function(){
+fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec",{
+  method:"POST",
+  body:JSON.stringify({
+    action:"uploadFile",
+    file:data,
+    type:type
+  }),
+headers:{
+    "Content-Type":"application/json"
+  }
+})
+.then(res=>res.json())
+.then(function(){
 
 showMessage("Upload success");
 
@@ -2898,10 +3002,9 @@ let f = document.getElementById(type=="doc" ? "docFrame" : "meetFrame");
 f.src = f.src;
 
 })
-.withFailureHandler(function(){
+.catch(function(){
 showMessage("Upload failed");
-})
-.uploadFile(data,type);
+});
 
 };
 
@@ -2917,31 +3020,41 @@ function doLogin(){
 
   console.log("login attempt", u, p);
 
-  google.script.run
-  .withSuccessHandler(function(res){
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec",{
+    method:"POST",
+    body:JSON.stringify({
+      action:"login",
+      username:u,
+      password:p
+    }),
+    headers:{
+    "Content-Type":"application/json"
+  }
+  })
+  .then(res=>res.json())
+  .then(function(res){
 
     console.log("SUCCESS:", res);
 
-if(res.status == "success"){
+    if(res.status == "success"){
 
-  sessionStorage.setItem("role", res.role);
-  sessionStorage.setItem("username", res.username);
+      sessionStorage.setItem("role", res.role);
+      sessionStorage.setItem("username", res.username);
 
-  document.getElementById("loginBox").style.display = "none";
+      document.getElementById("loginBox").style.display = "none";
 
-  applyRole();        // 🔥 อัปเดตสิทธิ์ทันที
-  showPage("home");   // 🔥 กลับหน้าหลักแบบไม่ reload
+      applyRole();        // 🔥 อัปเดตสิทธิ์ทันที
+      showPage("home");   // 🔥 กลับหน้าหลักแบบไม่ reload
 
-}else{
-  alert("login ไม่สำเร็จ");
-}
+    }else{
+      alert("login ไม่สำเร็จ");
+    }
 
   })
-  .withFailureHandler(function(err){   // 🔥 เพิ่มตรงนี้
+  .catch(function(err){
     console.error("ERROR:", err);
-    alert("ระบบมีปัญหา: " + err.message);
-  })
-  .login(u,p);
+    alert("ระบบมีปัญหา");
+  });
 
 }
 
@@ -3025,24 +3138,36 @@ function saveGuideline(){
     version: ver
   };
 
-  google.script.run
-  .withSuccessHandler(function(){
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec",{
+    method:"POST",
+    body:JSON.stringify({
+      action:"saveGuideline",
+      data:data
+    }),
+    headers:{
+    "Content-Type":"application/json"
+  }
+  })
+  .then(res=>res.json())
+  .then(function(){
     showMessage("บันทึกแล้ว");
   })
-  .withFailureHandler(function(){
+  .catch(function(){
     showMessage("บันทึกไม่สำเร็จ");
-  })
-  .saveGuideline(data);
+  });
+
 }
 
 function loadCtRatioData(){
-  google.script.run
-    .withSuccessHandler(renderCtRatioChart)
-    .withFailureHandler(function(err){
-      showMessage("โหลด C:T Ratio ไม่สำเร็จ");
-      console.error(err);
-    })
-    .getCtRatioPayload();
+
+  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCtRatio")
+  .then(res => res.json())
+  .then(renderCtRatioChart)
+  .catch(function(err){
+    showMessage("โหลด C:T Ratio ไม่สำเร็จ");
+    console.error(err);
+  });
+
 }
 
 function renderCtRatioChart(payload){
@@ -3128,21 +3253,6 @@ function closePopup(){
   localStorage.setItem("seenPopup", "true");
 }
 
-window.onload = function(){
-
-  console.log("LOADED 🔥");
-
-  let popup = document.getElementById("welcomePopup");
-  console.log("POPUP =", popup);
-
-  if(!popup){
-    alert("ไม่เจอ popup ❌");
-    return;
-  }
-
-  popup.style.display = "flex";
-
-}
 </script>
 
 </body>
