@@ -431,20 +431,17 @@ color:#930A00;
     grid-template-columns:repeat(2,1fr) !important;
   }
 }
-.file-grid{
-  display:flex;
-  flex-wrap:wrap;
-  gap:15px;
-}
-
 .file-card{
   width:180px;
   background:white;
-  border-radius:12px;
+  border-radius:14px;
   padding:12px;
   box-shadow:0 4px 10px rgba(0,0,0,0.08);
   text-align:center;
   transition:0.2s;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
 }
 
 .file-card:hover{
@@ -453,15 +450,23 @@ color:#930A00;
 }
 
 .file-card img{
-  width:60px;
-  margin-bottom:8px;
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:8px;
+  margin-bottom:10px; /* 🔥 เว้นระยะ */
 }
 
-.file-card a{
-  text-decoration:none;
-  color:#333;
+.file-name{
   font-size:13px;
-  word-break:break-word;
+  color:#333;
+  margin-top:5px;
+  line-height:1.4;
+  height:40px;              /* 🔥 บังคับความสูง */
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
 }
 /* POPUP */
 .msg{
@@ -2948,13 +2953,16 @@ function loadDriveFiles(folderId, boxId){
     : "https://cdn-icons-png.flaticon.com/512/337/337946.png";
 
   box.innerHTML += `
-    <div class="file-card">
-      <img src="${thumb}">
-      <a href="${f.url}" target="_blank">
-        ${f.name}
-      </a>
+  <div class="file-card" onclick="window.open('${f.url}')">
+
+    <img src="${thumb}">
+
+    <div class="file-name">
+      ${f.name}
     </div>
-  `;
+
+  </div>
+`;
 
 });
 
