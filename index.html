@@ -3018,17 +3018,12 @@ function doLogin(){
   let u = document.getElementById("user").value;
   let p = document.getElementById("pass").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "login",
-      username: u,   // ✅ สำคัญ
-      password: p    // ✅ สำคัญ
-    }),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  })
+  let url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec"
+    + "?action=login"
+    + "&username=" + encodeURIComponent(u)
+    + "&password=" + encodeURIComponent(p);
+
+  fetch(url)
   .then(res => res.json())
   .then(function(res){
 
@@ -3037,7 +3032,7 @@ function doLogin(){
     if(res.status == "success"){
 
       sessionStorage.setItem("role", res.role);
-      sessionStorage.setItem("username", res.username);
+      sessionStorage.setItem("username", u);
 
       document.getElementById("loginBox").style.display = "none";
 
