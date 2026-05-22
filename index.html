@@ -446,47 +446,7 @@ display:none;
 z-index:999;
 font-size:18px;
 }
-/*upload*/
-.input-group{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
 
-.input-modern{
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid #ddd;
-  font-size:14px;
-  transition:0.2s;
-}
-
-.input-modern:focus{
-  outline:none;
-  border-color:#930A00;
-  box-shadow:0 0 0 2px rgba(147,10,0,0.1);
-}
-
-.btn-modern{
-  background:#930A00;
-  color:white;
-  border:none;
-  padding:10px 16px;
-  border-radius:10px;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.btn-modern:hover{
-  background:#b31200;
-}
-
-.card{
-  background:white;
-  padding:20px;
-  border-radius:16px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.08);
-}
 /*login*/
 .login-overlay{
   display:none;
@@ -958,49 +918,13 @@ font-size:18px;
 <div id="documents" style="display:none">
 <h2>เอกสารสำคัญ</h2>
 
-<div class="card admin-only">
-
-<h3>📂 Upload เอกสารสำคัญ</h3>
-
-<div class="input-group">
-
-<input type="file" id="docFile" class="input-modern">
-
-<button class="btn-modern" onclick="upload('doc')">
-⬆ Upload
-</button>
-
-</div>
-
-</div>
-<br><br>
-
-<iframe id="docFrame"
-src="https://drive.google.com/embeddedfolderview?id=1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj#grid"
-class="drive-frame">
-</iframe>
+<div id="docBox"></div>
 
 <!-- MEETINGS -->
 <div class="card admin-only">
 <h2>รายงานการประชุม</h2>
 
-<h3>📑 Upload รายงานประชุม</h3>
-
-<div class="input-group">
-
-<input type="file" id="meetFile" class="input-modern">
-
-<button class="btn-modern" onclick="upload('meet')">
-⬆ Upload
-</button>
-</div>
-
-<br><br>
-
-<iframe id="meetFrame"
-src="https://drive.google.com/embeddedfolderview?id=1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-#grid"
-class="drive-frame">
-</iframe>
+<div id="meetBox"></div>
 </div>
 
 </div>
@@ -1340,6 +1264,9 @@ if(saved){
 }
 let currentStep = 1;
 let stepData = {}; // เก็บไฟล์แต่ละ step
+  let imgUrl = "https://lh3.googleusercontent.com/d/" + f.id;
+
+  const BASE_URL = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec";
 
 function loadFeature(){
 
@@ -1444,6 +1371,11 @@ renderFeature();
   if(current) current.style.display="block";
 
   sessionStorage.setItem("page", page);
+
+  if(page === "documents"){
+    loadDriveFiles("1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto", "docBox");
+    loadDriveFiles("1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto", "meetBox");
+  }
 
   let custom = document.getElementById("customSection");
   if(custom) custom.style.display = "none";
@@ -1562,31 +1494,17 @@ function saveFeature(){
     desc: document.getElementById("desc"+i).value
   }));
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "saveFeatureData",
-      data: newData
-    }),
-    headers: {
-      "Content-Type": "application/json"
-    }
-  })
+  fetch(BASE_URL + "?action=saveFeatureData&data=" + encodeURIComponent(JSON.stringify(newData)))
   .then(res => res.json())
-  .then(function(){
-
+  .then(()=>{
     showMessage("บันทึกแล้ว");
-
     loadFeature();
-
   })
-  .catch(err => {
-    console.error("saveFeature error:", err);
+  .catch(()=>{
     showMessage("บันทึกไม่สำเร็จ");
   });
 
 }
-
 // ====== LOAD KPI ======
 function loadKPI(index){
 
@@ -1628,7 +1546,6 @@ function loadKPI(index){
 function uploadKPI(type){
 
   document.getElementById("kpiAll").style.display = "none";
-
   let file = document.getElementById("kpiCsv").files[0];
 
   if(!file){
@@ -1642,17 +1559,9 @@ function uploadKPI(type){
 
     let text = e.target.result;
 
-    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
-      method: "POST",
-      body: JSON.stringify({
-        action: "saveKPIFromCSV",
-        text: text,
-        type: type
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
+    fetch(BASE_URL + "?action=saveKPIFromCSV"
+      + "&type=" + type
+      + "&text=" + encodeURIComponent(text))
     .then(res => res.json())
     .then(()=>{
 
@@ -1667,15 +1576,13 @@ function uploadKPI(type){
       }
 
     })
-    .catch(err => {
-      console.error("uploadKPI error:", err);
+    .catch(()=>{
       showMessage("อัปเดตไม่สำเร็จ");
     });
 
   };
 
   loadHomeSummary();
-
   reader.readAsText(file);
 }
 
@@ -2300,23 +2207,13 @@ let data = {
   direction: "MORE"
 };
 
-fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
-  method: "POST",
-  body: JSON.stringify({
-    action: "saveCustomKPI",
-    data: data
-  }),
-  headers: {
-    "Content-Type": "application/json"
-  }
-})
+fetch(BASE_URL + "?action=saveCustomKPI&data=" + encodeURIComponent(JSON.stringify(data)))
 .then(res => res.json())
-.then(function(res){
+.then(()=>{
   showMessage("บันทึกสำเร็จ");
   loadCustomData();
 })
-.catch(function(err){
-  console.error(err);
+.catch(()=>{
   showMessage("บันทึกไม่สำเร็จ");
   loadCustomData();
 });
@@ -2897,8 +2794,6 @@ function addStepInput(){
 
 function saveStepFiles(){
 
-  console.log("CLICK SAVE");
-
   let names = document.querySelectorAll(".step-name");
   let urls = document.querySelectorAll(".step-url");
 
@@ -2913,26 +2808,15 @@ function saveStepFiles(){
     }
   }
 
-  console.log("DATA:", arr);
-
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "saveStepFilesToSheet",
-      step: currentStep,
-      data: arr
-    }),
-    headers:{
-    "Content-Type":"application/json"
-  }
-  })
+  fetch(BASE_URL + "?action=saveStepFilesToSheet"
+    + "&step=" + currentStep
+    + "&data=" + encodeURIComponent(JSON.stringify(arr)))
   .then(res => res.json())
-  .then(function(res){
-    console.log("SAVE SUCCESS", res);
+  .then(()=>{
     openStep(currentStep);
   })
-  .catch(function(err){
-    console.log("SAVE ERROR", err);
+  .catch(()=>{
+    console.log("SAVE ERROR");
   });
 
 }
@@ -2962,53 +2846,38 @@ function renderUploadInputs(files){
 }
 
 // ===== UPLOAD =====
-function upload(type){
+function loadDriveFiles(folderId, targetDiv){
 
-let input = document.getElementById(type=="doc" ? "docFile" : "meetFile");
-let file = input.files[0];
+  fetch(BASE_URL + "?action=getDriveFiles&folderId=" + folderId)
+    .then(res => res.json())
+    .then(data => {
 
-if(!file){
-showMessage("Please select file");
-return;
-}
+      let box = document.getElementById(targetDiv);
+      box.innerHTML = "";
 
-let reader = new FileReader();
+      data.forEach(f => {
 
-reader.onload=function(e){
+        let imgUrl = "https://lh3.googleusercontent.com/d/" + f.id;
 
-let data={
-name:file.name,
-type:file.type,
-data:e.target.result.split(",")[1]
-};
+        box.innerHTML += `
+          <div style="
+            background:#fff;
+            padding:10px;
+            border-radius:10px;
+            margin-bottom:10px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.08);
+          ">
+            <img src="${imgUrl}" style="width:80px;display:block;margin-bottom:6px;">
+            <a href="${f.url}" target="_blank">📄 ${f.name}</a>
+          </div>
+        `;
 
-fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec",{
-  method:"POST",
-  body:JSON.stringify({
-    action:"uploadFile",
-    file:data,
-    type:type
-  }),
-headers:{
-    "Content-Type":"application/json"
-  }
-})
-.then(res=>res.json())
-.then(function(){
+      });
 
-showMessage("Upload success");
-
-let f = document.getElementById(type=="doc" ? "docFrame" : "meetFrame");
-f.src = f.src;
-
-})
-.catch(function(){
-showMessage("Upload failed");
-});
-
-};
-
-reader.readAsDataURL(file);
+    })
+    .catch(err => {
+      console.error("Drive load error:", err);
+    });
 
 }
 
@@ -3131,21 +3000,12 @@ function saveGuideline(){
     version: ver
   };
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec",{
-    method:"POST",
-    body:JSON.stringify({
-      action:"saveGuideline",
-      data:data
-    }),
-    headers:{
-    "Content-Type":"application/json"
-  }
-  })
-  .then(res=>res.json())
-  .then(function(){
+  fetch(BASE_URL + "?action=saveGuideline&data=" + encodeURIComponent(JSON.stringify(data)))
+  .then(res => res.json())
+  .then(()=>{
     showMessage("บันทึกแล้ว");
   })
-  .catch(function(){
+  .catch(()=>{
     showMessage("บันทึกไม่สำเร็จ");
   });
 
