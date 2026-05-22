@@ -1264,8 +1264,6 @@ if(saved){
 }
 let currentStep = 1;
 let stepData = {}; // เก็บไฟล์แต่ละ step
-  let imgUrl = "https://lh3.googleusercontent.com/d/" + f.id;
-
   const BASE_URL = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec";
 
 function loadFeature(){
@@ -1373,8 +1371,8 @@ renderFeature();
   sessionStorage.setItem("page", page);
 
   if(page === "documents"){
-    loadDriveFiles("1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto", "docBox");
-    loadDriveFiles("1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto", "meetBox");
+    loadDriveFiles("1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj", "docBox");
+    loadDriveFiles("1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-", "meetBox");
   }
 
   let custom = document.getElementById("customSection");
