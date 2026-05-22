@@ -431,7 +431,38 @@ color:#930A00;
     grid-template-columns:repeat(2,1fr) !important;
   }
 }
+.file-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:15px;
+}
 
+.file-card{
+  width:180px;
+  background:white;
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  text-align:center;
+  transition:0.2s;
+}
+
+.file-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 18px rgba(0,0,0,0.15);
+}
+
+.file-card img{
+  width:60px;
+  margin-bottom:8px;
+}
+
+.file-card a{
+  text-decoration:none;
+  color:#333;
+  font-size:13px;
+  word-break:break-word;
+}
 /* POPUP */
 .msg{
 position:fixed;
@@ -446,7 +477,47 @@ display:none;
 z-index:999;
 font-size:18px;
 }
+/*upload*/
+.input-group{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
 
+.input-modern{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.input-modern:focus{
+  outline:none;
+  border-color:#930A00;
+  box-shadow:0 0 0 2px rgba(147,10,0,0.1);
+}
+
+.btn-modern{
+  background:#930A00;
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.btn-modern:hover{
+  background:#b31200;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.08);
+}
 /*login*/
 .login-overlay{
   display:none;
@@ -916,15 +987,23 @@ font-size:18px;
 
 <!-- DOCUMENTS -->
 <div id="documents" style="display:none">
+
 <h2>เอกสารสำคัญ</h2>
 
-<div id="docBox"></div>
+<!-- 📂 DOCUMENT -->
+<div class="card">
+  <h3>📂 เอกสารสำคัญ</h3>
 
-<!-- MEETINGS -->
+  <div id="docBox" class="file-grid"></div>
+</div>
+
+<br>
+
+<!-- 📑 MEETING (ADMIN ONLY) -->
 <div class="card admin-only">
-<h2>รายงานการประชุม</h2>
+  <h3>📑 รายงานการประชุม</h3>
 
-<div id="meetBox"></div>
+  <div id="meetBox" class="file-grid"></div>
 </div>
 
 </div>
@@ -2844,29 +2923,30 @@ function renderUploadInputs(files){
 }
 
 // ===== UPLOAD =====
-function loadDriveFiles(folderId, targetDiv){
+function loadDriveFiles(folderId, boxId){
 
-  fetch(BASE_URL + "?action=getDriveFiles&folderId=" + folderId)
+  let url = BASE_URL + "?action=listFiles&type=" + folderId;
+
+  fetch(url)
     .then(res => res.json())
     .then(data => {
 
-      let box = document.getElementById(targetDiv);
+      let box = document.getElementById(boxId);
       box.innerHTML = "";
+
+      if(data.length === 0){
+        box.innerHTML = "<div style='color:#888;'>ยังไม่มีไฟล์</div>";
+        return;
+      }
 
       data.forEach(f => {
 
-        let imgUrl = "https://lh3.googleusercontent.com/d/" + f.id;
-
         box.innerHTML += `
-          <div style="
-            background:#fff;
-            padding:10px;
-            border-radius:10px;
-            margin-bottom:10px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.08);
-          ">
-            <img src="${imgUrl}" style="width:80px;display:block;margin-bottom:6px;">
-            <a href="${f.url}" target="_blank">📄 ${f.name}</a>
+          <div class="file-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png">
+            <a href="${f.url}" target="_blank">
+              ${f.name}
+            </a>
           </div>
         `;
 
@@ -2874,7 +2954,7 @@ function loadDriveFiles(folderId, targetDiv){
 
     })
     .catch(err => {
-      console.error("Drive load error:", err);
+      console.error("โหลดไฟล์ผิด:", err);
     });
 
 }
