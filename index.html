@@ -2939,18 +2939,24 @@ function loadDriveFiles(folderId, boxId){
         return;
       }
 
-      data.forEach(f => {
+     data.forEach(f => {
 
-        box.innerHTML += `
-          <div class="file-card">
-            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png">
-            <a href="${f.url}" target="_blank">
-              ${f.name}
-            </a>
-          </div>
-        `;
+  let fileId = f.url.match(/[-\w]{25,}/); // ดึง id จาก url
 
-      });
+  let thumb = fileId
+    ? `https://drive.google.com/thumbnail?id=${fileId}`
+    : "https://cdn-icons-png.flaticon.com/512/337/337946.png";
+
+  box.innerHTML += `
+    <div class="file-card">
+      <img src="${thumb}">
+      <a href="${f.url}" target="_blank">
+        ${f.name}
+      </a>
+    </div>
+  `;
+
+});
 
     })
     .catch(err => {
