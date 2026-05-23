@@ -209,10 +209,17 @@ nav .dropbtn:hover::after{
 }
 
 /* dropdown */
+.dropdown{
+  position:relative;
+  display:flex;
+  align-items:center;
+  padding-bottom:10px; /* 🔥 กันเมาส์หลุด */
+}
+
 .dropdown-content{
   display:none;
   position:absolute;
-  top:40px;
+  top:100%;   /* 🔥 ชิดปุ่มแทน 40px */
   left:0;
   background:white;
   min-width:200px;
@@ -1343,7 +1350,9 @@ style="padding:10px;border-radius:8px;border:1px solid #ccc;font-size:16px;">
 
   </div> <!-- ปิดกล่องขาว -->
 </div> <!-- ปิด kpiSingle -->
-
+  
+</div>
+</div>
   <footer class="site-footer">
 
   <div class="footer-content">
@@ -1360,10 +1369,6 @@ style="padding:10px;border-radius:8px;border:1px solid #ccc;font-size:16px;">
   </div>
 
 </footer>
-  
-</div>
-
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
