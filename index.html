@@ -1527,8 +1527,12 @@ if(ctRatioSection) ctRatioSection.style.display = "none";
 
 if(page=="kpi"){
   setTimeout(()=>{
-    document.getElementById("kpiAll").style.display = "flex"; // 🔥 บังคับ
-    onKPIChange();
+    // ❌ ลบ onKPIChange ออก
+    // onKPIChange();
+
+    // ✅ เรียกตรงๆเลย
+    document.getElementById("kpiAll").style.display = "flex";
+    loadAllKPI();
   },200);
 }
 
