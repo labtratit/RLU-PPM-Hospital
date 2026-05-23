@@ -1531,7 +1531,7 @@ if(page=="kpi"){
     // onKPIChange();
 
     // ✅ เรียกตรงๆเลย
-    document.getElementById("kpiAll").style.display = "flex";
+    document.getElementById("kpiAll").style.display = "block";
     loadAllKPI();
   },200);
 }
@@ -1889,9 +1889,7 @@ summaryRendered = false;
   failList = [];
 
   let container = document.getElementById("kpiAll");
-container.style.display = "flex"; // 🔥 บังคับโชว์เลย
-
-  document.getElementById("kpiSummary").innerHTML = "";
+container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้ง
 
   let count = 0;
   let total = KPI_LIST.length + 1;
@@ -2281,9 +2279,8 @@ document.getElementById("ctRatioSection").style.display = "none";
 
 
 if(val=="all"){
-  document.getElementById("kpiAll").style.display="flex"; // 🔥 เปลี่ยนจาก block
-  loadAllKPI();
-}
+    document.getElementById("kpiAll").style.display="block";
+    loadAllKPI();
 
 else if(val=="custom"){
 
