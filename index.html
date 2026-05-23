@@ -3117,7 +3117,6 @@ function logout(){
 }
 document.addEventListener("DOMContentLoaded", function(){
 
-  // ✅ popup (เขียนใหม่)
   let popup = document.getElementById("welcomePopup");
   console.log("POPUP =", popup);
 
@@ -3125,12 +3124,16 @@ document.addEventListener("DOMContentLoaded", function(){
     popup.style.display = "flex";
   }
 
-  // ✅ ของเดิม (ห้ามลบ)
+  // 🔥 อ่าน URL ก่อน
+  let params = new URLSearchParams(window.location.search);
+  let urlPage = params.get("page");
+
   let role = sessionStorage.getItem("role") || "guest";
   applyRole();
 
-  let page = sessionStorage.getItem("page") || "home";
-  showPage(page);
+  // 🔥 ใช้ URL ก่อน ถ้าไม่มีค่อยใช้ session
+  let finalPage = urlPage || sessionStorage.getItem("page") || "home";
+  showPage(finalPage);
 
   loadFeature();
 
