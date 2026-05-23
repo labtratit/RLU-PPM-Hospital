@@ -468,6 +468,11 @@ color:#930A00;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
 }
+  .file-grid{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:15px;
+}
 /* POPUP */
 .msg{
 position:fixed;
@@ -677,8 +682,34 @@ font-size:18px;
   inset:0;
   background:linear-gradient(to top, rgba(0,0,0,0.2), transparent);
 }
+  .site-footer{
+  background:linear-gradient(135deg,#fff,#f3f3f3);
+  border-top:2px solid #930A00;
+  margin-top:60px;
+}
 
+.footer-content{
+  max-width:1200px;
+  margin:auto;
+  padding:40px 20px;
+  text-align:center;
+}
 
+.footer-content h3::after{
+  content:"";
+  display:block;
+  width:60px;
+  height:3px;
+  background:#930A00;
+  margin:8px auto 0;
+}
+
+.footer-content p{
+  color:#555;
+  font-size:14px;
+  line-height:1.8;
+}
+  
 </style>
 
 </head>
@@ -1313,6 +1344,23 @@ style="padding:10px;border-radius:8px;border:1px solid #ccc;font-size:16px;">
   </div> <!-- ปิดกล่องขาว -->
 </div> <!-- ปิด kpiSingle -->
 
+  <footer class="site-footer">
+
+  <div class="footer-content">
+
+    <h3>ติดต่อ/สอบถามข้อมูล</h3>
+
+    <p>
+      โรงพยาบาลพระปิยมหาราช<br>
+      ที่อยู่: 108 ถนนสุขุมวิท ตำบลวังกระแจะ อำเภอเมือง จังหวัดตราด 23000<br>
+      E-Mail : labtratit@gmail.com<br>
+      เบอร์โทรศัพท์ : 0-3951-3555 ต่อ 220,223
+    </p>
+
+  </div>
+
+</footer>
+  
 </div>
 
 </div>
