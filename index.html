@@ -1527,6 +1527,7 @@ if(ctRatioSection) ctRatioSection.style.display = "none";
 
 if(page=="kpi"){
   setTimeout(()=>{
+    document.getElementById("kpiAll").style.display = "flex"; // 🔥 บังคับ
     onKPIChange();
   },200);
 }
@@ -1884,7 +1885,7 @@ summaryRendered = false;
   failList = [];
 
   let container = document.getElementById("kpiAll");
-  container.innerHTML = "";
+container.style.display = "flex"; // 🔥 บังคับโชว์เลย
 
   document.getElementById("kpiSummary").innerHTML = "";
 
@@ -2276,7 +2277,7 @@ document.getElementById("ctRatioSection").style.display = "none";
 
 
 if(val=="all"){
-  document.getElementById("kpiAll").style.display="block";
+  document.getElementById("kpiAll").style.display="flex"; // 🔥 เปลี่ยนจาก block
   loadAllKPI();
 }
 
