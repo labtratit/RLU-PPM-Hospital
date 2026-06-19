@@ -3306,46 +3306,38 @@ function closePopup(){
   localStorage.setItem("seenPopup", "true");
 }
 
-  function loadCostKPI(){
+function renderCostKPI(data){
 
-  fetch(BASE_URL + "?action=getCostKPI")
-  .then(res=>res.json())
-  .then(data=>{
-    renderCostKPI(data);
-  });
+  let box = document.getElementById("kpiCostBox");
+  if(!box) return;
 
-}
-  
-  function renderCostKPI(data){
-
-  let totalCost = 0;
+  // 🔥 ถ้าไม่ใช่ array → แปลงเป็น array
+  if(!Array.isArray(data)){
+    data = [data];
+  }
 
   let html = `
-  <div class="card">
-    <h3>💰 ค่าใช้จ่ายจากการตรวจซ้ำ</h3>
+    <div style="
+      background:white;
+      padding:20px;
+      border-radius:16px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom:20px;
+    ">
+      <h3 style="color:#930A00;">💸 ค่าใช้จ่ายจากการตรวจซ้ำ</h3>
   `;
 
-  data.forEach(d=>{
-
-    totalCost += d.cost;
-
+  data.forEach(d => {
     html += `
-      <div style="display:flex; justify-content:space-between; padding:8px 0;">
-        <span>${d.name}</span>
-        <span>${d.cost.toLocaleString()} บาท</span>
+      <div style="margin-top:10px;">
+        ปี ${d.year} : <b>${Number(d.cost).toLocaleString()} บาท</b>
       </div>
     `;
   });
 
-  html += `
-    <hr>
-    <div style="font-weight:bold; text-align:right;">
-      รวม ${totalCost.toLocaleString()} บาท
-    </div>
-  </div>
-  `;
+  html += `</div>`;
 
-  document.getElementById("kpiCostBox").innerHTML = html;
+  box.innerHTML = html;
 
 }
 
