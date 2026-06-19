@@ -1251,6 +1251,7 @@ font-size:18px;
 
 <h2>Dashboard KPI</h2>
 <div id="kpiSummary" style="margin-bottom:20px;"></div>
+  <div id="kpiCostBox"></div>
 <!-- 🔽 dropdown -->
 <div style="margin-bottom:20px;">
 <select id="kpiSelect" onchange="onKPIChange()" 
@@ -1266,6 +1267,7 @@ style="padding:10px;border-radius:8px;border:1px solid #ccc;font-size:16px;">
 <option value="6">Creatinine ปีละครั้ง</option>
 <option value="custom">อัตราการรายงานผลตรวจได้ทันตามกำหนด</option>
 <option value="ct_ratio">Top Ward C:T Ratio สูงสุด</option>
+  
 
 
 </select>
@@ -2103,7 +2105,8 @@ container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้�
         renderSummaryDashboard();
       }
     },800);
-
+    
+loadCostKPI();
   });
 
 }
@@ -3300,6 +3303,49 @@ function renderCtRatioChart(payload){
 function closePopup(){
   document.getElementById("welcomePopup").style.display = "none";
   localStorage.setItem("seenPopup", "true");
+}
+
+  function loadCostKPI(){
+
+  fetch(BASE_URL + "?action=getCostKPI")
+  .then(res=>res.json())
+  .then(data=>{
+    renderCostKPI(data);
+  });
+
+}
+  
+  function renderCostKPI(data){
+
+  let totalCost = 0;
+
+  let html = `
+  <div class="card">
+    <h3>💰 ค่าใช้จ่ายจากการตรวจซ้ำ</h3>
+  `;
+
+  data.forEach(d=>{
+
+    totalCost += d.cost;
+
+    html += `
+      <div style="display:flex; justify-content:space-between; padding:8px 0;">
+        <span>${d.name}</span>
+        <span>${d.cost.toLocaleString()} บาท</span>
+      </div>
+    `;
+  });
+
+  html += `
+    <hr>
+    <div style="font-weight:bold; text-align:right;">
+      รวม ${totalCost.toLocaleString()} บาท
+    </div>
+  </div>
+  `;
+
+  document.getElementById("kpiCostBox").innerHTML = html;
+
 }
 
 </script>
