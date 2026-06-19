@@ -2544,33 +2544,46 @@ setTimeout(()=>{
 }
 
 //kpi summerry//
-function renderSummary(data, title, target){
+function renderSummary(data, title, target){ 
 
-  let sumA = 0;
-  let sumB = 0;
 
-  data.forEach(d => {
-    sumA += Number(d.a) || 0;
-    sumB += Number(d.b) || 0;
-  });
 
-  let percent = sumB > 0 ? (sumA / sumB * 100) : 0;
+let rows = data.filter(d => d.hospcode == "10696");
 
-  let pass = (target == 5) ? percent < 5 : percent >= target;
+let sumA = 0;
+let sumB = 0;
 
-  pass = pass === true;
+rows.forEach(d => {
+  sumA += Number(d.a) || 0;
+  sumB += Number(d.b) || 0;
+});
 
-  let item = {
-    title: title,
-    value: percent.toFixed(2),
-    pass: Boolean(pass)
-  };
+let percent = sumB > 0 ? (sumA / sumB * 100) : 0;
 
-  if(pass === true){
-    passList.push(item);
-  }else{
-    failList.push(item);
-  }
+
+let pass = (target == 5) ? percent < 5 : percent >= target; 
+
+
+
+// 🔥 บังคับให้เป็น true/false เท่านั้น pass = pass === true; 
+
+
+
+let item = { title: title, value: percent.toFixed(2), pass: Boolean(pass) // 🔥 บังคับเป็น true/false 
+
+}; 
+
+
+
+if(pass === true){ 
+
+passList.push(item); }else{ 
+
+failList.push(item); 
+
+} 
+
+
 
 }
 
