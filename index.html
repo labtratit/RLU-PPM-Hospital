@@ -852,41 +852,40 @@ font-size:18px;
 ">
 
   <!-- LEFT -->
-  <div style="
-    flex:1;
-    min-width:320px;
-    background:transparent;
-    padding:0px;
-    border-radius:16px;
-    box-shadow:none;
-    text-align:center;
-  ">
-
-    <h3 style="margin-bottom:15px;">Dashboard KPI</h3>
-
-<div style="max-width:260px;margin:auto; position:relative;">
-  <canvas id="homeDonut"></canvas>
-</div>
-
-<!-- ✅ ย้ายมาข้างล่าง -->
-<div id="donutSummary" style="
-  margin-top:15px;
-  font-size:16px;
-  font-weight:500;
+<div style="
+  flex:1;
+  min-width:320px;
+  background:transparent;
+  padding:0px;
+  border-radius:16px;
+  box-shadow:none;
   text-align:center;
-"></div>
+">
 
-<div style="margin-top:12px;font-size:18px;font-weight:600;">
-  <span style="color:#4A6FA5;">● ผ่าน</span>
-  &nbsp;&nbsp;
-  <span style="color:#D97B7B;">● ไม่ผ่าน</span>
-</div>
+  <h3 style="margin-bottom:15px;">Dashboard KPI</h3>
 
+  <div style="max-width:260px;margin:auto; position:relative;">
+    <canvas id="homeDonut"></canvas>
+  </div>
+
+  <!-- donut summary -->
+  <div id="donutSummary" style="
+    margin-top:15px;
+    font-size:16px;
+    font-weight:500;
+    text-align:center;
+  "></div>
+
+  <div style="margin-top:12px;font-size:18px;font-weight:600;">
+    <span style="color:#4A6FA5;">● ผ่าน</span>
+    &nbsp;&nbsp;
+    <span style="color:#D97B7B;">● ไม่ผ่าน</span>
   </div>
 
   <!-- เงินหน้าหลัก -->
-<div id="homeCostBox"></div>
+  <div id="homeCostBox" style="margin-top:20px;"></div>
 
+</div>
   
   <!-- RIGHT -->
   <div style="
@@ -3331,7 +3330,7 @@ function renderCostKPI(data){
     ">
 
       <h3 style="color:#930A00;margin-bottom:10px;">
-        💸 มูลค่าความสูญเสียจากการตรวจซ้ำ
+        มูลค่าความสูญเสียจากการตรวจซ้ำ
       </h3>
 
       <div style="
@@ -3348,7 +3347,7 @@ function renderCostKPI(data){
         color:#666;
         margin-top:10px;
       ">
-        *คำนวณจากจำนวนการตรวจซ้ำ × ราคาต่อรายการ<br>
+        * คำนวณจากจำนวนการตรวจซ้ำ × ราคาต่อรายการ<br>
         (HbA1c, LDL-Cholesterol, Total Cholesterol, Triglyceride)
       </div>
 
