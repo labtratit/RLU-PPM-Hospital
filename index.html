@@ -1413,7 +1413,7 @@ if(saved){
 }
 let currentStep = 1;
 let stepData = {}; // เก็บไฟล์แต่ละ step
-  const BASE_URL = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec";
+  const BASE_URL = "https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec";
 
   function calculateSummary(data){
 
@@ -1437,7 +1437,7 @@ let stepData = {}; // เก็บไฟล์แต่ละ step
   
 function loadFeature(){
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getFeatureData")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getFeatureData")
     .then(res => res.json())
     .then(function(data){
 
@@ -1692,7 +1692,7 @@ function loadKPI(index){
 
   if(type){
 
-    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=" + type)
+    fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getKPIData&type=" + type)
       .then(res => res.json())
       .then(function(data){
         renderChart(data, kpi.title, kpi.target);
@@ -1703,7 +1703,7 @@ function loadKPI(index){
 
   }else{
 
-    fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=" + kpi.table)
+    fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getMOPHKPI&table=" + kpi.table)
       .then(res => res.json())
       .then(function(data){
         renderChart(data, kpi.title, kpi.target);
@@ -1965,9 +1965,9 @@ container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้�
     let url;
 
     if(type){
-      url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=" + type;
+      url = "https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getKPIData&type=" + type;
     }else{
-      url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=" + kpi.table;
+      url = "https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getMOPHKPI&table=" + kpi.table;
     }
 
     fetch(url)
@@ -1989,7 +1989,7 @@ container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้�
   });
 
   // ===== CUSTOM SUMMARY =====
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCustomKPI")
   .then(res => res.json())
   .then(function(data){
 
@@ -2022,7 +2022,7 @@ container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้�
 
   container.appendChild(ctDiv);
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCtRatio")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCtRatio")
     .then(res => res.json())
     .then(renderCtRatioAllChart)
     .catch(err => console.error(err));
@@ -2045,7 +2045,7 @@ container.innerHTML = ""; // 🔥 ล้างก่อนทุกครั้�
 
   container.appendChild(div);
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCustomKPI")
   .then(res => res.json())
   .then(function(data){
 
@@ -2487,7 +2487,7 @@ options:{
 //โหลดจากชีทมาแสดง
 function loadCustomData(){
 
-fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCustomKPI")
 .then(res => res.json())
 .then(function(data){
 
@@ -2772,7 +2772,7 @@ function loadHomeSummary(){
     // ===== 🔥 CASE 1: CSV KPI =====
     if(type){
 
-      fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getKPIData&type=${type}`)
+      fetch(`https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getKPIData&type=${type}`)
       .then(res => res.json())
       .then(function(data){
 
@@ -2793,7 +2793,7 @@ function loadHomeSummary(){
     // ===== 🔥 CASE 2: HDC KPI =====
     else{
 
-      fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getMOPHKPI&table=${kpi.table}`)
+      fetch(`https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getMOPHKPI&table=${kpi.table}`)
       .then(res => res.json())
       .then(function(data){
 
@@ -2814,7 +2814,7 @@ function loadHomeSummary(){
   });
 
   // ===== 🔥 CUSTOM KPI =====
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCustomKPI")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCustomKPI")
   .then(res => res.json())
   .then(function(data){
 
@@ -2931,7 +2931,7 @@ function openStep(step){
 
   currentStep = step;
 
-  fetch(`https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getStepFiles&step=${step}`)
+  fetch(`https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getStepFiles&step=${step}`)
   .then(res => res.json())
   .then(function(files){
 
@@ -3084,7 +3084,7 @@ function doLogin(){
   let u = document.getElementById("user").value;
   let p = document.getElementById("pass").value;
 
-  let url = "https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec"
+  let url = "https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec"
     + "?action=login"
     + "&username=" + encodeURIComponent(u)
     + "&password=" + encodeURIComponent(p);
@@ -3213,7 +3213,7 @@ function saveGuideline(){
 
 function loadCtRatioData(){
 
-  fetch("https://script.google.com/macros/s/AKfycbyvFgFqVxRDev1SIo4fluqxNahI6OB9E3En6uVitUhRAFJlAfVJnWCtwr0rPuvddVLocg/exec?action=getCtRatio")
+  fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getCtRatio")
   .then(res => res.json())
   .then(renderCtRatioChart)
   .catch(function(err){
