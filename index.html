@@ -3340,6 +3340,19 @@ function renderCostKPI(data){
   box.innerHTML = html;
 
 }
+  function loadCostKPI(){
+
+  fetch(BASE_URL + "?action=getCostKPI")
+  .then(res => res.json())
+  .then(data => {
+    console.log("COST KPI:", data);
+    renderCostKPI(data);
+  })
+  .catch(err => {
+    console.error("COST KPI ERROR:", err);
+  });
+
+}
 
 </script>
 
