@@ -1649,7 +1649,50 @@ function renderFeatureForm(){
           border-radius:12px;
           box-shadow:0 2px 8px rgba(0,0,0,0.05);
         ">
-          <input class="input-modern" value="${item.img}" id="img${i}" placeholder="URL รูป"><br><br>
+          <div style="margin-bottom:10px;">
+
+  <img
+    id="preview${i}"
+    src="${convertDriveLink(item.img)}"
+    style="
+      width:100%;
+      height:120px;
+      object-fit:cover;
+      border-radius:8px;
+      margin-bottom:10px;
+      border:1px solid #ddd;
+    "
+  >
+
+  <input
+    type="file"
+    id="upload${i}"
+    accept="image/*"
+    style="margin-bottom:8px;"
+  >
+
+  <button
+    onclick="uploadImage(${i})"
+    type="button"
+    style="
+      background:#4A6FA5;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      margin-bottom:10px;
+    "
+  >
+    อัปโหลดรูป
+  </button>
+
+  <input
+    class="input-modern"
+    value="${item.img}"
+    id="img${i}"
+    placeholder="URL รูป"
+  ><br><br>
 
           <input class="input-modern" value="${item.title}" id="title${i}" placeholder="หัวข้อ"><br><br>
 
@@ -1678,6 +1721,63 @@ function saveFeature(){
   .catch(()=>{
     showMessage("บันทึกไม่สำเร็จ");
   });
+
+}
+
+  function uploadImage(index){
+
+  let file =
+    document
+    .getElementById(
+      "upload"+index
+    )
+    .files[0];
+
+  if(!file){
+    alert("เลือกรูปก่อน");
+    return;
+  }
+
+  let reader =
+    new FileReader();
+
+  reader.onload = function(e){
+
+    let base64 =
+      e.target.result;
+
+    fetch(
+      BASE_URL +
+      "?action=uploadFeatureImage" +
+      "&fileName=" +
+      encodeURIComponent(file.name) +
+      "&base64=" +
+      encodeURIComponent(base64)
+    )
+    .then(r=>r.json())
+.then(res=>{
+
+  document
+  .getElementById(
+    "img"+index
+  )
+  .value = res.url;
+
+  document
+  .getElementById(
+    "preview"+index
+  )
+  .src = res.url;
+
+  showMessage(
+    "อัปโหลดสำเร็จ"
+  );
+
+});
+
+  };
+
+  reader.readAsDataURL(file);
 
 }
 // ====== LOAD KPI ======
