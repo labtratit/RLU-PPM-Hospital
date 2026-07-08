@@ -1740,10 +1740,9 @@ function saveFeature(){
 
 function uploadImage(index){
 
-  let file =
-    document
-      .getElementById("upload"+index)
-      .files[0];
+  let file = document
+    .getElementById("upload" + index)
+    .files[0];
 
   if(!file){
     alert("เลือกรูปก่อน");
@@ -1757,40 +1756,47 @@ function uploadImage(index){
     let base64 = e.target.result;
 
     fetch(BASE_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
       },
-      body:JSON.stringify({
-        action:"uploadFeatureImage",
-        fileName:file.name,
-        base64:base64
+      body: JSON.stringify({
+        action: "uploadFeatureImage",
+        fileName: file.name,
+        base64: base64
       })
     })
-    .then(r=>r.json())
-    .then(res=>{
+    .then(response => {
 
-      console.log("UPLOAD RES:",res);
+      console.log("Status:", response.status);
+
+      if(!response.ok){
+        throw new Error("HTTP " + response.status);
+      }
+
+      return response.json();
+
+    })
+    .then(res => {
+
+      console.log("UPLOAD RES:", res);
 
       if(res.error){
         alert(res.error);
         return;
       }
 
-      document
-        .getElementById("img"+index)
-        .value = res.url;
-
-      document
-        .getElementById("preview"+index)
-        .src = res.url;
+      document.getElementById("img" + index).value = res.url;
+      document.getElementById("preview" + index).src = res.url;
 
       showMessage("อัปโหลดสำเร็จ");
 
     })
-    .catch(err=>{
-      console.error(err);
+    .catch(err => {
+
+      console.error("Upload Error:", err);
       alert("อัปโหลดไม่สำเร็จ");
+
     });
 
   };
