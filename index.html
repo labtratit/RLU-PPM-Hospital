@@ -1643,62 +1643,76 @@ function renderFeatureForm(){
       gap:20px;
     ">
       ${featureData.map((item,i)=>`
-        <div style="
-          background:#fff;
-          padding:15px;
-          border-radius:12px;
-          box-shadow:0 2px 8px rgba(0,0,0,0.05);
-        ">
-          <div style="margin-bottom:10px;">
+<div style="
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+">
 
-  <img
-    id="preview${i}"
-    src="${convertDriveLink(item.img)}"
-    style="
-      width:100%;
-      height:120px;
-      object-fit:cover;
-      border-radius:8px;
-      margin-bottom:10px;
-      border:1px solid #ddd;
-    "
-  >
+  <div style="margin-bottom:10px;">
 
-  <input
-    type="file"
-    id="upload${i}"
-    accept="image/*"
-    style="margin-bottom:8px;"
-  >
+    <img
+      id="preview${i}"
+      src="${convertDriveLink(item.img)}"
+      style="
+        width:100%;
+        height:120px;
+        object-fit:cover;
+        border-radius:8px;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+      "
+    >
 
-  <button
-    onclick="uploadImage(${i})"
-    type="button"
-    style="
-      background:#4A6FA5;
-      color:white;
-      border:none;
-      padding:6px 12px;
-      border-radius:6px;
-      cursor:pointer;
-      margin-bottom:10px;
-    "
-  >
-    อัปโหลดรูป
-  </button>
+    <input
+      type="file"
+      id="upload${i}"
+      accept="image/*"
+      style="margin-bottom:8px;"
+    >
 
-  <input
-    class="input-modern"
-    value="${item.img}"
-    id="img${i}"
-    placeholder="URL รูป"
-  ><br><br>
+    <button
+      onclick="uploadImage(${i})"
+      type="button"
+      style="
+        background:#4A6FA5;
+        color:white;
+        border:none;
+        padding:6px 12px;
+        border-radius:6px;
+        cursor:pointer;
+        margin-bottom:10px;
+      "
+    >
+      อัปโหลดรูป
+    </button>
 
-          <input class="input-modern" value="${item.title}" id="title${i}" placeholder="หัวข้อ"><br><br>
+    <input
+      class="input-modern"
+      value="${item.img}"
+      id="img${i}"
+      placeholder="URL รูป"
+    ><br><br>
 
-          <input class="input-modern" value="${item.desc}" id="desc${i}" placeholder="รายละเอียด">
-        </div>
-      `).join("")}
+    <input
+      class="input-modern"
+      value="${item.title}"
+      id="title${i}"
+      placeholder="หัวข้อ"
+    ><br><br>
+
+    <input
+      class="input-modern"
+      value="${item.desc}"
+      id="desc${i}"
+      placeholder="รายละเอียด"
+    >
+
+  </div>
+
+</div>
+`).join("")}
     </div>
   `;
 }
