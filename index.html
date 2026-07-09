@@ -1761,10 +1761,12 @@ function uploadImage(index){
         "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify({
-        action: "uploadFeatureImage",
-        fileName: file.name,
-        base64: base64
-      })
+  action: "uploadFeatureImage",
+  fileName: file.name,
+  base64: base64,
+  username: localStorage.getItem("username"),
+  role: localStorage.getItem("role")
+})
     })
     .then(response => {
 
