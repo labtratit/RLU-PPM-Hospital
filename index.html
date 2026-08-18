@@ -1536,66 +1536,163 @@ const BAR_BG = "#E0E0E0";       // ⚪ เทาอ่อน (option)
 // ====== PAGE ======
 function showPage(page){
 
-renderFeature();
+  console.log(
+    "SHOW PAGE CALLED:",
+    page
+  );
 
-  ["home","documents","guideline","kpi","manual"].forEach(p=>{
-    let el = document.getElementById(p);
-    if(el) el.style.display="none";
+  console.trace(
+    "SHOW PAGE TRACE"
+  );
+
+
+  [
+    "home",
+    "documents",
+    "guideline",
+    "kpi",
+    "manual"
+  ].forEach(p=>{
+
+    let el =
+      document.getElementById(p);
+
+    if(el){
+      el.style.display = "none";
+    }
+
   });
 
-  let current = document.getElementById(page);
-  if(current) current.style.display="block";
 
-  sessionStorage.setItem("page", page);
+  let current =
+    document.getElementById(page);
 
+  if(current){
+    current.style.display = "block";
+  }
+
+
+  sessionStorage.setItem(
+    "page",
+    page
+  );
+
+
+  // ==========================================
+  // DOCUMENTS
+  // ==========================================
   if(page === "documents"){
-    loadDriveFiles("1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj", "docBox");
-    loadDriveFiles("1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-", "meetBox");
+
+    loadDriveFiles(
+      "1VEMaIyM6mzX08ZiBKefOK0hScKk9Bbnj",
+      "docBox"
+    );
+
+    loadDriveFiles(
+      "1dyqP8pEgx7mIASfWETBGX49yq6nnpxJ-",
+      "meetBox"
+    );
+
   }
 
-  let custom = document.getElementById("customSection");
-  if(custom) custom.style.display = "none";
 
-  let kpiAll = document.getElementById("kpiAll");
-  if(kpiAll) kpiAll.style.display = "none";
+  // ==========================================
+  // ซ่อน section ย่อย
+  // ==========================================
+  let custom =
+    document.getElementById(
+      "customSection"
+    );
 
-  let kpiSingle = document.getElementById("kpiSingle");
-  if(kpiSingle) kpiSingle.style.display = "none";
-
-let ctRatioSection = document.getElementById("ctRatioSection");
-if(ctRatioSection) ctRatioSection.style.display = "none";
+  if(custom){
+    custom.style.display = "none";
+  }
 
 
-if(page=="kpi"){
-  setTimeout(()=>{
-    // ❌ ลบ onKPIChange ออก
-    // onKPIChange();
+  let kpiAll =
+    document.getElementById(
+      "kpiAll"
+    );
 
-    // ✅ เรียกตรงๆเลย
-    document.getElementById("kpiAll").style.display = "block";
-    loadAllKPI();
-  },200);
-}
+  if(kpiAll){
+    kpiAll.style.display = "none";
+  }
 
-  // if(page=="kpi"){
-  //   let select = document.getElementById("kpiSelect");
-  //   setTimeout(()=>{
-  //     if(typeof loadAllKPI === "function"){
-  //       loadAllKPI();
-  //     }
-  //   },200);
-  // }
 
+  let kpiSingle =
+    document.getElementById(
+      "kpiSingle"
+    );
+
+  if(kpiSingle){
+    kpiSingle.style.display = "none";
+  }
+
+
+  let ctRatioSection =
+    document.getElementById(
+      "ctRatioSection"
+    );
+
+  if(ctRatioSection){
+    ctRatioSection.style.display = "none";
+  }
+
+
+  // ==========================================
+  // KPI
+  // ==========================================
+  if(page === "kpi"){
+
+    setTimeout(()=>{
+
+      let all =
+        document.getElementById(
+          "kpiAll"
+        );
+
+      if(all){
+        all.style.display = "block";
+      }
+
+      loadAllKPI();
+
+    },200);
+
+  }
+
+
+  // ==========================================
+  // fallback
+  // ==========================================
   if(!document.getElementById(page)){
-    document.getElementById("home").style.display = "block";
+
+    let home =
+      document.getElementById(
+        "home"
+      );
+
+    if(home){
+      home.style.display = "block";
+    }
+
   }
 
-  if(page=="home"){
-  loadHomeSummary();
-  loadFeature();
-}
 
-  console.log("HOME LOAD KPI");
+  // ==========================================
+  // HOME
+  // ==========================================
+  if(page === "home"){
+
+    console.log(
+      "HOME LOAD KPI"
+    );
+
+    loadHomeSummary();
+    loadFeature();
+
+  }
+
 }
 //ที่ใส่รูปกิจกรรม
 function convertDriveLink(url){
@@ -1860,49 +1957,6 @@ function loadKPI(index){
     console.error("HDC KPI error:", err);
   });
 
-}
-
-function uploadKPI(type){
-
-  document.getElementById("kpiAll").style.display = "none";
-  let file = document.getElementById("kpiCsv").files[0];
-
-  if(!file){
-    alert("กรุณาเลือกไฟล์");
-    return;
-  }
-
-  let reader = new FileReader();
-
-  reader.onload = function(e){
-
-    let text = e.target.result;
-
-    fetch(BASE_URL + "?action=saveKPIFromCSV"
-      + "&type=" + type
-      + "&text=" + encodeURIComponent(text))
-    .then(res => res.json())
-    .then(()=>{
-
-      showMessage("อัปเดต " + type + " สำเร็จ");
-
-      let val = document.getElementById("kpiSelect").value;
-
-      if(val == "ct_ratio"){
-        loadCtRatioData();
-      }else if(val !== "all" && val !== "custom"){
-        loadKPI(parseInt(val));
-      }
-
-    })
-    .catch(()=>{
-      showMessage("อัปเดตไม่สำเร็จ");
-    });
-
-  };
-
-  loadHomeSummary();
-  reader.readAsText(file);
 }
 
 // ====== RENDER ======
