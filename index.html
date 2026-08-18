@@ -1591,13 +1591,9 @@ if(page=="kpi"){
   }
 
   if(page=="home"){
-    loadHomeSummary();
-  }
-
-  if(page=="home"){
-    loadHomeSummary();
-    loadFeature();
-  }
+  loadHomeSummary();
+  loadFeature();
+}
 
   console.log("HOME LOAD KPI");
 }
@@ -2556,6 +2552,25 @@ async function loadAllKPI(){
 
       let data = await res.json();
 
+
+      // ======================================
+      // เช็ก error ที่ Apps Script ส่งกลับมา
+      // ======================================
+      if(data && data.error){
+
+        console.error(
+          "API ERROR RESPONSE:",
+          kpi.table,
+          data.error
+        );
+
+        throw new Error(
+          data.error
+        );
+
+      }
+
+
       console.log(
         isCUPKPI(kpi.table)
           ? "CUP KPI:"
@@ -2565,11 +2580,27 @@ async function loadAllKPI(){
       );
 
 
+      // ======================================
       // กันข้อมูลผิดรูปแบบ
+      // ======================================
       if(!Array.isArray(data)){
+
         throw new Error(
           "ข้อมูลไม่ใช่ Array"
         );
+
+      }
+
+
+      // ======================================
+      // กัน Array ว่าง
+      // ======================================
+      if(data.length === 0){
+
+        throw new Error(
+          "API ส่งข้อมูลว่างกลับมา"
+        );
+
       }
 
 
@@ -2615,7 +2646,7 @@ async function loadAllKPI(){
       );
 
 
-      // เว้นช่วงเล็กน้อยก่อนยิงตัวถัดไป
+      // เว้นช่วงก่อนตัวถัดไป
       await new Promise(resolve =>
         setTimeout(resolve, 500)
       );
@@ -2629,8 +2660,8 @@ async function loadAllKPI(){
         err
       );
 
-      // ไม่สร้างค่า 0 ปลอม
-      // ข้ามไปตัวถัดไปแทน
+      // ไม่ส่งข้อมูลว่างไป Summary
+      // เพื่อไม่ให้กลายเป็น 0% ปลอม
 
       await new Promise(resolve =>
         setTimeout(resolve, 1000)
@@ -2651,7 +2682,19 @@ async function loadAllKPI(){
       "?action=getCustomKPI"
     );
 
+    if(!res.ok){
+      throw new Error(
+        "HTTP " + res.status
+      );
+    }
+
     let data = await res.json();
+
+    if(data && data.error){
+      throw new Error(
+        data.error
+      );
+    }
 
     renderCustomSummaryFromSheet(data);
 
@@ -2709,7 +2752,19 @@ async function loadAllKPI(){
       "?action=getCtRatio"
     );
 
+    if(!res.ok){
+      throw new Error(
+        "HTTP " + res.status
+      );
+    }
+
     let payload = await res.json();
+
+    if(payload && payload.error){
+      throw new Error(
+        payload.error
+      );
+    }
 
     renderCtRatioAllChart(payload);
 
@@ -2752,7 +2807,19 @@ async function loadAllKPI(){
       "?action=getCustomKPI"
     );
 
+    if(!res.ok){
+      throw new Error(
+        "HTTP " + res.status
+      );
+    }
+
     let data = await res.json();
+
+    if(data && data.error){
+      throw new Error(
+        data.error
+      );
+    }
 
     const monthOrder = {
       "มค":1,
@@ -2770,23 +2837,28 @@ async function loadAllKPI(){
     };
 
     data = data.map(d=>({
+
       monthRaw: (d.month || "").trim(),
       month: cleanMonth(d.month),
       year: Number(d.year),
       value: Number(d.value)
+
     }));
 
     data.sort((a,b)=>{
+
       return (
         (a.year - b.year) ||
         (monthOrder[a.month] - monthOrder[b.month])
       );
+
     });
 
     let labels = [];
     let values = [];
 
     data.forEach(d=>{
+
       labels.push(
         d.monthRaw + " " + d.year
       );
@@ -2794,46 +2866,63 @@ async function loadAllKPI(){
       values.push(
         d.value
       );
+
     });
 
     new Chart(
       document.getElementById("customAllChart"),
       {
+
         type:"line",
 
         data:{
+
           labels:labels,
 
           datasets:[{
+
             data:values,
             borderWidth:2,
             fill:false
+
           }]
+
         },
 
         options:{
+
           responsive:true,
           maintainAspectRatio:false,
 
           plugins:{
+
             legend:{
               display:false
             }
+
           },
 
           scales:{
+
             y:{
+
               min:95,
               max:100,
 
               ticks:{
+
                 callback:(v)=>{
                   return v + "%";
                 }
+
               }
+
             }
+
           }
+
         }
+
       }
     );
 
@@ -2853,7 +2942,7 @@ async function loadAllKPI(){
   loadCostKPI();
 
 }
-
+  
 //กรอกข้อมูลตัวชี้วัดพี่กิ๊ก//
 function addData(){
 
