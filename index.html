@@ -2663,298 +2663,388 @@ function renderCtRatioAllChart(payload){
 }
 
 
-function renderChartMulti(data, title, target, index){
+async function loadAllKPI(){
 
-  let ctx = document.getElementById("chart"+index);
-if(!ctx) return; // 🔥 กันพัง
+  console.log("LOAD ALL KPI CALLED 🔥");
 
-  let labels = [];
-  let values = [];
-  let colors = [];
+  summaryRendered = false;
+  summaryHTML = "";
+  passList = [];
+  failList = [];
 
-  let sumA = 0;
-  let sumB = 0;
+  let container = document.getElementById("kpiAll");
+  container.innerHTML = "";
 
-  let dataMap = {};
-  data.forEach(d=>{
-    dataMap[d.hospcode] = d;
+  container.style.display = "flex";
+  container.style.flexWrap = "wrap";
+  container.style.gap = "20px";
+
+
+  // ==========================================
+  // สร้าง DOM ของ KPI ทั้ง 7 ตัว
+  // ==========================================
+  KPI_LIST.forEach((kpi, index)=>{
+
+    let div = document.createElement("div");
+
+    div.style.background = "white";
+    div.style.padding = "15px";
+    div.style.borderRadius = "12px";
+    div.className = "kpi-card";
+
+    div.innerHTML = `
+      <h3 style="font-size:16px;margin-bottom:10px;">
+        ${kpi.title}
+      </h3>
+
+      <div style="height:220px;">
+        <canvas id="chart${index}"></canvas>
+      </div>
+    `;
+
+    container.appendChild(div);
+
   });
 
-  HOSP_ORDER.forEach(code=>{
-    let d = dataMap[code];
-    if(d){
-      sumA += parseFloat(d.a) || 0;
-      sumB += parseFloat(d.b) || 0;
+
+  // ==========================================
+  // โหลด KPI ทีละตัว
+  // ==========================================
+  for(let index = 0; index < KPI_LIST.length; index++){
+
+    let kpi = KPI_LIST[index];
+
+    let url;
+
+    if(isCUPKPI(kpi.table)){
+
+      url =
+        BASE_URL +
+        "?action=getMOPHKPICUP&table=" +
+        encodeURIComponent(kpi.table);
+
+    }else{
+
+      url =
+        BASE_URL +
+        "?action=getMOPHKPI&table=" +
+        encodeURIComponent(kpi.table);
+
     }
-  });
 
-  let total = sumB > 0 ? (sumA/sumB*100) : 0;
+    try{
 
-  labels.push("รวม");
-  values.push(total.toFixed(2));
-  colors.push("#444");
+      console.log(
+        "START LOAD:",
+        index,
+        kpi.table
+      );
 
-  HOSP_ORDER.forEach(code=>{
+      let res = await fetch(url);
 
-    let sumA = 0;
-    let sumB = 0;
-
-    data.forEach(d=>{
-      if(d.hospcode == code){
-        sumA += parseFloat(d.a) || 0;
-        sumB += parseFloat(d.b) || 0;
+      if(!res.ok){
+        throw new Error(
+          "HTTP " + res.status
+        );
       }
-    });
 
-    let percent = sumB > 0 ? (sumA/sumB*100) : 0;
+      let data = await res.json();
 
-    labels.push(HOSP_MAP[code]);
-    values.push(percent.toFixed(2));
+      console.log(
+        isCUPKPI(kpi.table)
+          ? "CUP KPI:"
+          : "HOSPITAL KPI:",
+        kpi.table,
+        data
+      );
 
-    let isPass = (target == 5) ? percent < target : percent >= target;
 
-    colors.push(isPass ? PASS_COLOR : FAIL_COLOR);
-
-  });
-
-  new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        data:values,
-        backgroundColor:colors
-      }]
-    },
-options:{
-  responsive:true,
-  maintainAspectRatio:false,
-
-  plugins:{
-    legend:{display:false},
-
-    datalabels:{
-      anchor:'end',
-      align:'top',
-      formatter:(v)=> v+"%"
-    },
-
-    annotation:{ // ✅ ใส่กลับ
-      annotations:{
-        line1:{
-          type:"line",
-          yMin:target,
-          yMax:target,
-          borderColor:"#999",
-          borderWidth:2,
-          borderDash:[6,6]
-        }
+      // กันข้อมูลผิดรูปแบบ
+      if(!Array.isArray(data)){
+        throw new Error(
+          "ข้อมูลไม่ใช่ Array"
+        );
       }
+
+
+      // ======================================
+      // วาดกราฟ
+      // ======================================
+      if(isCUPKPI(kpi.table)){
+
+        renderChartMultiCUP(
+          data,
+          kpi.title,
+          kpi.target,
+          index
+        );
+
+      }else{
+
+        renderChartMulti(
+          data,
+          kpi.title,
+          kpi.target,
+          index
+        );
+
+      }
+
+
+      // ======================================
+      // Summary
+      // ======================================
+      renderSummary(
+        data,
+        kpi.title,
+        kpi.target,
+        kpi.table
+      );
+
+
+      console.log(
+        "FINISH LOAD:",
+        index,
+        kpi.table
+      );
+
+
+      // เว้นช่วงเล็กน้อยก่อนยิงตัวถัดไป
+      await new Promise(resolve =>
+        setTimeout(resolve, 500)
+      );
+
+
+    }catch(err){
+
+      console.error(
+        "KPI LOAD FAILED:",
+        kpi.table,
+        err
+      );
+
+      // ไม่สร้างค่า 0 ปลอม
+      // ข้ามไปตัวถัดไปแทน
+
+      await new Promise(resolve =>
+        setTimeout(resolve, 1000)
+      );
+
     }
 
-  },
-
-  scales:{
-    y:{
-      beginAtZero:true,
-      ticks:{callback:(v)=> v+"%"}
-    }
   }
-}
-  });
 
-}
 
-  function renderChartMultiCUP(data, title, target, index){
+  // ==========================================
+  // CUSTOM SUMMARY
+  // ==========================================
+  try{
 
-  let ctx = document.getElementById("chart" + index);
-  if(!ctx) return;
-
-  let labels = [];
-  let values = [];
-  let colors = [];
-
-  let sumA = 0;
-  let sumB = 0;
-
-  let dataMap = {};
-
-  data.forEach(d=>{
-    dataMap[String(d.hospcode)] = d;
-  });
-
-  // ===== รวมจังหวัด =====
-  CUP_ORDER.forEach(code=>{
-
-    let d = dataMap[code];
-
-    if(d){
-      sumA += Number(d.a) || 0;
-      sumB += Number(d.b) || 0;
-    }
-
-  });
-
-  let total = sumB > 0
-    ? (sumA / sumB * 100)
-    : 0;
-
-  labels.push("รวม");
-  values.push(total.toFixed(2));
-  colors.push("#444");
-
-  // ===== ราย CUP =====
-  CUP_ORDER.forEach(code=>{
-
-    let d = dataMap[code];
-
-    let a = d ? Number(d.a) || 0 : 0;
-    let b = d ? Number(d.b) || 0 : 0;
-
-    let percent = b > 0
-      ? (a / b * 100)
-      : 0;
-
-    labels.push(CUP_MAP[code]);
-    values.push(percent.toFixed(2));
-
-    let isPass = percent >= target;
-
-    colors.push(
-      isPass ? PASS_COLOR : FAIL_COLOR
+    let res = await fetch(
+      BASE_URL +
+      "?action=getCustomKPI"
     );
 
-  });
+    let data = await res.json();
 
-  new Chart(ctx,{
-    type:"bar",
+    renderCustomSummaryFromSheet(data);
 
-    data:{
-      labels:labels,
-      datasets:[{
-        data:values,
-        backgroundColor:colors
-      }]
-    },
+  }catch(err){
 
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
+    console.error(
+      "CUSTOM SUMMARY error:",
+      err
+    );
 
-      plugins:{
-        legend:{display:false},
+  }
 
-        datalabels:{
-          anchor:"end",
-          align:"top",
-          formatter:(v)=> v+"%"
+
+  // ==========================================
+  // Summary Dashboard
+  // ==========================================
+  renderSummaryDashboard();
+
+
+  // ==========================================
+  // CT RATIO
+  // ==========================================
+  let ctDiv = document.createElement("div");
+
+  ctDiv.style.background = "white";
+  ctDiv.style.padding = "15px";
+  ctDiv.style.borderRadius = "12px";
+  ctDiv.className = "kpi-card";
+
+  ctDiv.innerHTML = `
+    <h3 style="font-size:16px;margin-bottom:10px;">
+      Top Ward C:T Ratio สูงสุด
+    </h3>
+
+    <div
+      id="ctRatioAllMeta"
+      style="
+        font-size:12px;
+        color:#666;
+        margin-bottom:8px;
+      ">
+    </div>
+
+    <div style="height:220px;">
+      <canvas id="ctRatioAllChart"></canvas>
+    </div>
+  `;
+
+  container.appendChild(ctDiv);
+
+  try{
+
+    let res = await fetch(
+      BASE_URL +
+      "?action=getCtRatio"
+    );
+
+    let payload = await res.json();
+
+    renderCtRatioAllChart(payload);
+
+  }catch(err){
+
+    console.error(
+      "CT RATIO error:",
+      err
+    );
+
+  }
+
+
+  // ==========================================
+  // CUSTOM GRAPH
+  // ==========================================
+  let div = document.createElement("div");
+
+  div.style.background = "white";
+  div.style.padding = "15px";
+  div.style.borderRadius = "12px";
+  div.className = "kpi-card";
+
+  div.innerHTML = `
+    <h3 style="font-size:16px;margin-bottom:10px;">
+      อัตราการรายงานผลตรวจได้ทันตามกำหนด
+    </h3>
+
+    <div style="height:220px;">
+      <canvas id="customAllChart"></canvas>
+    </div>
+  `;
+
+  container.appendChild(div);
+
+  try{
+
+    let res = await fetch(
+      BASE_URL +
+      "?action=getCustomKPI"
+    );
+
+    let data = await res.json();
+
+    const monthOrder = {
+      "มค":1,
+      "กพ":2,
+      "มีค":3,
+      "เมย":4,
+      "พค":5,
+      "มิย":6,
+      "กค":7,
+      "สค":8,
+      "กย":9,
+      "ตค":10,
+      "พย":11,
+      "ธค":12
+    };
+
+    data = data.map(d=>({
+      monthRaw: (d.month || "").trim(),
+      month: cleanMonth(d.month),
+      year: Number(d.year),
+      value: Number(d.value)
+    }));
+
+    data.sort((a,b)=>{
+      return (
+        (a.year - b.year) ||
+        (monthOrder[a.month] - monthOrder[b.month])
+      );
+    });
+
+    let labels = [];
+    let values = [];
+
+    data.forEach(d=>{
+      labels.push(
+        d.monthRaw + " " + d.year
+      );
+
+      values.push(
+        d.value
+      );
+    });
+
+    new Chart(
+      document.getElementById("customAllChart"),
+      {
+        type:"line",
+
+        data:{
+          labels:labels,
+
+          datasets:[{
+            data:values,
+            borderWidth:2,
+            fill:false
+          }]
         },
 
-        annotation:{
-          annotations:{
-            line1:{
-              type:"line",
-              yMin:target,
-              yMax:target,
-              borderColor:"#999",
-              borderWidth:2,
-              borderDash:[6,6]
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+
+          plugins:{
+            legend:{
+              display:false
+            }
+          },
+
+          scales:{
+            y:{
+              min:95,
+              max:100,
+
+              ticks:{
+                callback:(v)=>{
+                  return v + "%";
+                }
+              }
             }
           }
         }
-      },
-
-      scales:{
-        y:{
-          beginAtZero:true,
-          ticks:{
-            callback:(v)=> v+"%"
-          }
-        }
       }
-    }
-  });
+    );
 
-}
+  }catch(err){
 
-function onKPIChange(){
+    console.error(
+      "CUSTOM GRAPH error:",
+      err
+    );
 
-let uploadBox = document.querySelector("#kpiSingle .admin-only");
-if(uploadBox) uploadBox.style.display = "none";
-let val = document.getElementById("kpiSelect").value;
-
-// 🔥 ลบทุกกราฟที่มี
-if(chart){
-  chart.destroy();
-  chart = null;
-}
-
-if(customChart){
-  customChart.destroy();
-  customChart = null;
-}
-
-if(ctRatioChart){
-  ctRatioChart.destroy();
-  ctRatioChart = null;
-}
-
-// 🔥 เคลียร์ canvas
-let canvas1 = document.getElementById("myChart");
-if(canvas1){
-  let ctx1 = canvas1.getContext("2d");
-  ctx1.clearRect(0,0,canvas1.width,canvas1.height);
-}
-
-let canvas2 = document.getElementById("customChart");
-if(canvas2){
-  let ctx2 = canvas2.getContext("2d");
-  ctx2.clearRect(0,0,canvas2.width,canvas2.height);
-}
-
-// 🔥 ซ่อนทั้งหมดก่อน
-document.getElementById("kpiAll").style.display="none";
-document.getElementById("kpiSingle").style.display="none";
-document.getElementById("customSection").style.display="none";
-document.getElementById("ctRatioSection").style.display = "none";
+  }
 
 
-if(val=="all"){
-  document.getElementById("kpiAll").style.display="block";
-  loadAllKPI();
-}
-
-else if(val=="custom"){
-
-  document.getElementById("kpiAll").style.display="none";
-  document.getElementById("kpiSingle").style.display="none";
-
-  document.getElementById("customSection").style.display="block";
-
-  loadCustomData();
-
-  // 🔥 บังคับ resize หลัง render
-
-  setTimeout(()=>{
-
-    if(customChart){
-
-      customChart.resize();
-
-    }
-
-  },300);
-}
-
-else if(val == "ct_ratio"){
-  document.getElementById("ctRatioSection").style.display = "block";
-  loadCtRatioData();
-}
-
-else{
-  document.getElementById("kpiSingle").style.display="block";
-  loadKPI(parseInt(val));
-}
+  // ==========================================
+  // COST KPI
+  // ==========================================
+  loadCostKPI();
 
 }
 
