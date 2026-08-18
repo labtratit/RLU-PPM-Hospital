@@ -1392,6 +1392,7 @@ let passList = [];
 let failList = [];
 let summaryHTML = "";
 let summaryRendered = false;
+let homeSummaryLoading = false;
 let featureData = [];
 let saved = localStorage.getItem("featureData");
 if(saved){
@@ -3460,19 +3461,41 @@ if(pass){
 //dashborad home
 async function loadHomeSummary(){
 
-  console.log("HOME SUMMARY START");
+  // ==========================================
+  // กันถูกเรียกซ้อน
+  // ==========================================
+  if(homeSummaryLoading){
+
+    console.log(
+      "HOME SUMMARY SKIPPED - already loading ⏳"
+    );
+
+    return;
+  }
+
+  homeSummaryLoading = true;
+
+  console.log(
+    "HOME SUMMARY START 🔥"
+  );
+
 
   summaryRendered = false;
   passList = [];
   failList = [];
 
-  // ===== โหลด KPI 7 ตัวทีละตัว =====
-  for(let i = 0; i < KPI_LIST.length; i++){
 
-    let kpi = KPI_LIST[i];
+  // ==========================================
+  // ฟังก์ชันโหลด KPI หนึ่งตัว
+  // ==========================================
+  async function loadOneHomeKPI(index){
+
+    let kpi = KPI_LIST[index];
 
     let url;
 
+
+    // ===== 3 KPI ปีละครั้ง : CUP =====
     if(isCUPKPI(kpi.table)){
 
       url =
@@ -3480,7 +3503,11 @@ async function loadHomeSummary(){
         "?action=getMOPHKPICUP&table=" +
         encodeURIComponent(kpi.table);
 
-    }else{
+    }
+
+
+    // ===== 4 KPI 90 วัน : รายโรงพยาบาล =====
+    else{
 
       url =
         BASE_URL +
@@ -3489,92 +3516,230 @@ async function loadHomeSummary(){
 
     }
 
-    try{
 
-      console.log(
-        "HOME START:",
-        i,
-        kpi.table
-      );
+    console.log(
+      "HOME START:",
+      index,
+      kpi.table
+    );
 
-      let res = await fetch(url);
 
-      if(!res.ok){
-        throw new Error("HTTP " + res.status);
-      }
+    let res = await fetch(url);
 
-      let data = await res.json();
 
-      // ถ้า Apps Script ส่ง error object มา
-      if(data && data.error){
-        throw new Error(data.error);
-      }
+    if(!res.ok){
 
-      if(!Array.isArray(data)){
-        throw new Error("ข้อมูลไม่ใช่ Array");
-      }
-
-      renderSummary(
-        data,
-        kpi.title,
-        kpi.target,
-        kpi.table
-      );
-
-      console.log(
-        "HOME FINISH:",
-        i,
-        kpi.table
-      );
-
-      // เว้นจังหวะก่อนตัวถัดไป
-      await new Promise(resolve =>
-        setTimeout(resolve, 500)
-      );
-
-    }catch(err){
-
-      console.error(
-        "HOME KPI FAILED:",
-        kpi.table,
-        err
-      );
-
-      await new Promise(resolve =>
-        setTimeout(resolve, 1000)
+      throw new Error(
+        "HTTP " + res.status
       );
 
     }
 
-  }
-
-
-  // ===== CUSTOM KPI =====
-  try{
-
-    let res = await fetch(
-      BASE_URL +
-      "?action=getCustomKPI"
-    );
 
     let data = await res.json();
 
-    renderCustomSummaryFromSheet(data);
 
-  }catch(err){
+    // ======================================
+    // Apps Script ส่ง error
+    // ======================================
+    if(data && data.error){
 
-    console.error(
-      "CUSTOM HOME KPI FAILED:",
-      err
+      throw new Error(
+        data.error
+      );
+
+    }
+
+
+    // ======================================
+    // ต้องเป็น Array
+    // ======================================
+    if(!Array.isArray(data)){
+
+      throw new Error(
+        "ข้อมูลไม่ใช่ Array"
+      );
+
+    }
+
+
+    // ======================================
+    // ห้ามเอาข้อมูลว่างไปคิดเป็น 0%
+    // ======================================
+    if(data.length === 0){
+
+      throw new Error(
+        "API ส่งข้อมูลว่างกลับมา"
+      );
+
+    }
+
+
+    // ======================================
+    // คำนวณ Summary
+    // ======================================
+    renderSummary(
+      data,
+      kpi.title,
+      kpi.target,
+      kpi.table
+    );
+
+
+    console.log(
+      "HOME FINISH:",
+      index,
+      kpi.table
     );
 
   }
 
 
-  // ===== วาด Donut หลังทุกอย่างจบ =====
-  renderHomeDonut();
+  try{
 
-  console.log("HOME SUMMARY FINISH");
+    // ==========================================
+    // โหลดครั้งละ 2 KPI
+    // ==========================================
+    for(
+      let start = 0;
+      start < KPI_LIST.length;
+      start += 2
+    ){
+
+      let batch = [];
+
+
+      // ===== ตัวที่ 1 =====
+      batch.push(
+
+        loadOneHomeKPI(start)
+
+        .catch(err=>{
+
+          console.error(
+            "HOME KPI FAILED:",
+            KPI_LIST[start].table,
+            err
+          );
+
+        })
+
+      );
+
+
+      // ===== ตัวที่ 2 =====
+      if(start + 1 < KPI_LIST.length){
+
+        let second = start + 1;
+
+        batch.push(
+
+          loadOneHomeKPI(second)
+
+          .catch(err=>{
+
+            console.error(
+              "HOME KPI FAILED:",
+              KPI_LIST[second].table,
+              err
+            );
+
+          })
+
+        );
+
+      }
+
+
+      // รอ 2 ตัวนี้ก่อน
+      await Promise.all(batch);
+
+
+      // เว้นระยะก่อน batch ถัดไป
+      if(start + 2 < KPI_LIST.length){
+
+        await new Promise(resolve =>
+          setTimeout(resolve, 400)
+        );
+
+      }
+
+    }
+
+
+    // ==========================================
+    // CUSTOM KPI
+    // ==========================================
+    try{
+
+      let res = await fetch(
+        BASE_URL +
+        "?action=getCustomKPI"
+      );
+
+
+      if(!res.ok){
+
+        throw new Error(
+          "HTTP " + res.status
+        );
+
+      }
+
+
+      let data = await res.json();
+
+
+      if(data && data.error){
+
+        throw new Error(
+          data.error
+        );
+
+      }
+
+
+      renderCustomSummaryFromSheet(
+        data
+      );
+
+
+    }catch(err){
+
+      console.error(
+        "CUSTOM HOME KPI FAILED:",
+        err
+      );
+
+    }
+
+
+    // ==========================================
+    // วาด Donut หลังโหลดทั้งหมดเสร็จ
+    // ==========================================
+    renderHomeDonut();
+
+
+    console.log(
+      "HOME SUMMARY FINISH ✅",
+      {
+        pass: passList.length,
+        fail: failList.length,
+        total:
+          passList.length +
+          failList.length
+      }
+    );
+
+
+  }finally{
+
+    // ==========================================
+    // ปลด lock เสมอ
+    // ==========================================
+    homeSummaryLoading = false;
+
+  }
 
 }
 
