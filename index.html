@@ -1400,7 +1400,6 @@ if(saved){
 let currentStep = 1;
 let stepData = {}; // เก็บไฟล์แต่ละ step
   const BASE_URL = "https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec";
-
   function calculateSummary(data){
 
   let sumA = 0;
@@ -2499,7 +2498,24 @@ async function loadAllKPI(){
         ${kpi.title}
       </h3>
 
-      <div style="height:220px;">
+      <div id="loading${index}" style="
+        height:220px;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        color:#888;
+        font-size:14px;
+      ">
+        กำลังโหลดข้อมูล...
+      </div>
+
+      <div
+        id="chartBox${index}"
+        style="
+          height:220px;
+          display:none;
+        "
+      >
         <canvas id="chart${index}"></canvas>
       </div>
     `;
@@ -2510,9 +2526,9 @@ async function loadAllKPI(){
 
 
   // ==========================================
-  // โหลด KPI ทีละตัว
+  // ฟังก์ชันโหลด KPI หนึ่งตัว
   // ==========================================
-  for(let index = 0; index < KPI_LIST.length; index++){
+  async function loadOneKPI(index){
 
     let kpi = KPI_LIST[index];
 
@@ -2534,137 +2550,221 @@ async function loadAllKPI(){
 
     }
 
-    try{
 
-      console.log(
-        "START LOAD:",
-        index,
-        kpi.table
+    console.log(
+      "START LOAD:",
+      index,
+      kpi.table
+    );
+
+
+    let res = await fetch(url);
+
+    if(!res.ok){
+      throw new Error(
+        "HTTP " + res.status
+      );
+    }
+
+
+    let data = await res.json();
+
+
+    // ======================================
+    // Apps Script ส่ง error กลับมา
+    // ======================================
+    if(data && data.error){
+
+      throw new Error(
+        data.error
       );
 
-      let res = await fetch(url);
-
-      if(!res.ok){
-        throw new Error(
-          "HTTP " + res.status
-        );
-      }
-
-      let data = await res.json();
+    }
 
 
-      // ======================================
-      // เช็ก error ที่ Apps Script ส่งกลับมา
-      // ======================================
-      if(data && data.error){
+    // ======================================
+    // เช็กรูปแบบข้อมูล
+    // ======================================
+    if(!Array.isArray(data)){
 
-        console.error(
-          "API ERROR RESPONSE:",
-          kpi.table,
-          data.error
-        );
-
-        throw new Error(
-          data.error
-        );
-
-      }
-
-
-      console.log(
-        isCUPKPI(kpi.table)
-          ? "CUP KPI:"
-          : "HOSPITAL KPI:",
-        kpi.table,
-        data
+      throw new Error(
+        "ข้อมูลไม่ใช่ Array"
       );
 
-
-      // ======================================
-      // กันข้อมูลผิดรูปแบบ
-      // ======================================
-      if(!Array.isArray(data)){
-
-        throw new Error(
-          "ข้อมูลไม่ใช่ Array"
-        );
-
-      }
+    }
 
 
-      // ======================================
-      // กัน Array ว่าง
-      // ======================================
-      if(data.length === 0){
+    if(data.length === 0){
 
-        throw new Error(
-          "API ส่งข้อมูลว่างกลับมา"
-        );
+      throw new Error(
+        "API ส่งข้อมูลว่างกลับมา"
+      );
 
-      }
+    }
 
 
-      // ======================================
-      // วาดกราฟ
-      // ======================================
-      if(isCUPKPI(kpi.table)){
-
-        renderChartMultiCUP(
-          data,
-          kpi.title,
-          kpi.target,
-          index
-        );
-
-      }else{
-
-        renderChartMulti(
-          data,
-          kpi.title,
-          kpi.target,
-          index
-        );
-
-      }
+    console.log(
+      isCUPKPI(kpi.table)
+        ? "CUP KPI:"
+        : "HOSPITAL KPI:",
+      kpi.table,
+      data
+    );
 
 
-      // ======================================
-      // Summary
-      // ======================================
-      renderSummary(
+    // ======================================
+    // ซ่อน Loading / เปิดพื้นที่กราฟ
+    // ======================================
+    let loading =
+      document.getElementById(
+        "loading" + index
+      );
+
+    let chartBox =
+      document.getElementById(
+        "chartBox" + index
+      );
+
+    if(loading){
+      loading.style.display = "none";
+    }
+
+    if(chartBox){
+      chartBox.style.display = "block";
+    }
+
+
+    // ======================================
+    // วาดกราฟ
+    // ======================================
+    if(isCUPKPI(kpi.table)){
+
+      renderChartMultiCUP(
         data,
         kpi.title,
         kpi.target,
-        kpi.table
+        index
       );
 
+    }else{
 
-      console.log(
-        "FINISH LOAD:",
-        index,
-        kpi.table
+      renderChartMulti(
+        data,
+        kpi.title,
+        kpi.target,
+        index
       );
 
+    }
 
-      // เว้นช่วงก่อนตัวถัดไป
+
+    // ======================================
+    // Summary
+    // ======================================
+    renderSummary(
+      data,
+      kpi.title,
+      kpi.target,
+      kpi.table
+    );
+
+
+    console.log(
+      "FINISH LOAD:",
+      index,
+      kpi.table
+    );
+
+  }
+
+
+  // ==========================================
+  // โหลดครั้งละ 2 KPI
+  // ==========================================
+  for(
+    let start = 0;
+    start < KPI_LIST.length;
+    start += 2
+  ){
+
+    let batch = [];
+
+
+    // ตัวแรกของ batch
+    batch.push(
+      loadOneKPI(start)
+        .catch(err=>{
+
+          console.error(
+            "KPI LOAD FAILED:",
+            KPI_LIST[start].table,
+            err
+          );
+
+          let loading =
+            document.getElementById(
+              "loading" + start
+            );
+
+          if(loading){
+
+            loading.innerHTML = `
+              <span style="color:#C62828;">
+                โหลดข้อมูลไม่สำเร็จ
+              </span>
+            `;
+
+          }
+
+        })
+    );
+
+
+    // ตัวที่สองของ batch
+    if(start + 1 < KPI_LIST.length){
+
+      let second = start + 1;
+
+      batch.push(
+        loadOneKPI(second)
+          .catch(err=>{
+
+            console.error(
+              "KPI LOAD FAILED:",
+              KPI_LIST[second].table,
+              err
+            );
+
+            let loading =
+              document.getElementById(
+                "loading" + second
+              );
+
+            if(loading){
+
+              loading.innerHTML = `
+                <span style="color:#C62828;">
+                  โหลดข้อมูลไม่สำเร็จ
+                </span>
+              `;
+
+            }
+
+          })
+      );
+
+    }
+
+
+    // รอ KPI 2 ตัวนี้จบก่อน
+    await Promise.all(batch);
+
+
+    // เว้นช่วงเล็กน้อยก่อน batch ถัดไป
+    if(start + 2 < KPI_LIST.length){
+
       await new Promise(resolve =>
-        setTimeout(resolve, 500)
-      );
-
-
-    }catch(err){
-
-      console.error(
-        "KPI LOAD FAILED:",
-        kpi.table,
-        err
-      );
-
-      // ไม่ส่งข้อมูลว่างไป Summary
-      // เพื่อไม่ให้กลายเป็น 0% ปลอม
-
-      await new Promise(resolve =>
-        setTimeout(resolve, 1000)
+        setTimeout(resolve, 400)
       );
 
     }
@@ -2745,6 +2845,7 @@ async function loadAllKPI(){
 
   container.appendChild(ctDiv);
 
+
   try{
 
     let res = await fetch(
@@ -2800,6 +2901,7 @@ async function loadAllKPI(){
 
   container.appendChild(div);
 
+
   try{
 
     let res = await fetch(
@@ -2821,6 +2923,7 @@ async function loadAllKPI(){
       );
     }
 
+
     const monthOrder = {
       "มค":1,
       "กพ":2,
@@ -2836,31 +2939,47 @@ async function loadAllKPI(){
       "ธค":12
     };
 
+
     data = data.map(d=>({
 
-      monthRaw: (d.month || "").trim(),
-      month: cleanMonth(d.month),
-      year: Number(d.year),
-      value: Number(d.value)
+      monthRaw:
+        (d.month || "").trim(),
+
+      month:
+        cleanMonth(d.month),
+
+      year:
+        Number(d.year),
+
+      value:
+        Number(d.value)
 
     }));
+
 
     data.sort((a,b)=>{
 
       return (
         (a.year - b.year) ||
-        (monthOrder[a.month] - monthOrder[b.month])
+        (
+          monthOrder[a.month] -
+          monthOrder[b.month]
+        )
       );
 
     });
 
+
     let labels = [];
     let values = [];
+
 
     data.forEach(d=>{
 
       labels.push(
-        d.monthRaw + " " + d.year
+        d.monthRaw +
+        " " +
+        d.year
       );
 
       values.push(
@@ -2869,8 +2988,11 @@ async function loadAllKPI(){
 
     });
 
+
     new Chart(
-      document.getElementById("customAllChart"),
+      document.getElementById(
+        "customAllChart"
+      ),
       {
 
         type:"line",
@@ -2926,6 +3048,7 @@ async function loadAllKPI(){
       }
     );
 
+
   }catch(err){
 
     console.error(
@@ -2940,6 +3063,11 @@ async function loadAllKPI(){
   // COST KPI
   // ==========================================
   loadCostKPI();
+
+
+  console.log(
+    "LOAD ALL KPI FINISHED ✅"
+  );
 
 }
   
