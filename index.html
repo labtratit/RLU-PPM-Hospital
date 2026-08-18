@@ -2437,6 +2437,168 @@ function renderChartMultiCUP(data, title, target, index){
   });
 
 }
+
+  function onKPIChange(){
+
+  let val = document.getElementById("kpiSelect").value;
+
+  console.log("KPI CHANGE:", val);
+
+
+  // ==========================================
+  // Destroy กราฟเดี่ยวเก่า
+  // ==========================================
+  if(chart){
+    chart.destroy();
+    chart = null;
+  }
+
+  if(customChart){
+    customChart.destroy();
+    customChart = null;
+  }
+
+  if(ctRatioChart){
+    ctRatioChart.destroy();
+    ctRatioChart = null;
+  }
+
+
+  // ==========================================
+  // เคลียร์ canvas
+  // ==========================================
+  let canvas1 = document.getElementById("myChart");
+
+  if(canvas1){
+
+    let ctx1 = canvas1.getContext("2d");
+
+    ctx1.clearRect(
+      0,
+      0,
+      canvas1.width,
+      canvas1.height
+    );
+
+  }
+
+
+  let canvas2 = document.getElementById("customChart");
+
+  if(canvas2){
+
+    let ctx2 = canvas2.getContext("2d");
+
+    ctx2.clearRect(
+      0,
+      0,
+      canvas2.width,
+      canvas2.height
+    );
+
+  }
+
+
+  // ==========================================
+  // ซ่อนทุก section ก่อน
+  // ==========================================
+  let kpiAll =
+    document.getElementById("kpiAll");
+
+  let kpiSingle =
+    document.getElementById("kpiSingle");
+
+  let customSection =
+    document.getElementById("customSection");
+
+  let ctRatioSection =
+    document.getElementById("ctRatioSection");
+
+
+  if(kpiAll){
+    kpiAll.style.display = "none";
+  }
+
+  if(kpiSingle){
+    kpiSingle.style.display = "none";
+  }
+
+  if(customSection){
+    customSection.style.display = "none";
+  }
+
+  if(ctRatioSection){
+    ctRatioSection.style.display = "none";
+  }
+
+
+  // ==========================================
+  // ALL
+  // ==========================================
+  if(val === "all"){
+
+    if(kpiAll){
+      kpiAll.style.display = "flex";
+    }
+
+    loadAllKPI();
+
+  }
+
+
+  // ==========================================
+  // CUSTOM KPI
+  // ==========================================
+  else if(val === "custom"){
+
+    if(customSection){
+      customSection.style.display = "block";
+    }
+
+    loadCustomData();
+
+
+    setTimeout(()=>{
+
+      if(customChart){
+        customChart.resize();
+      }
+
+    },300);
+
+  }
+
+
+  // ==========================================
+  // C:T RATIO
+  // ==========================================
+  else if(val === "ct_ratio"){
+
+    if(ctRatioSection){
+      ctRatioSection.style.display = "block";
+    }
+
+    loadCtRatioData();
+
+  }
+
+
+  // ==========================================
+  // KPI เดี่ยว 0 - 6
+  // ==========================================
+  else{
+
+    if(kpiSingle){
+      kpiSingle.style.display = "block";
+    }
+
+    loadKPI(
+      parseInt(val)
+    );
+
+  }
+
+}
   
 
 // ====== POPUP ======
