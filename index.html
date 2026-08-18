@@ -2155,6 +2155,239 @@ colors.push(isPass ? PASS_COLOR : FAIL_COLOR);
   );
 
 }
+function renderChartMulti(data, title, target, index){
+
+  let ctx = document.getElementById("chart" + index);
+  if(!ctx) return;
+
+  let labels = [];
+  let values = [];
+  let colors = [];
+
+  let sumA = 0;
+  let sumB = 0;
+
+  let dataMap = {};
+
+  data.forEach(d=>{
+    dataMap[String(d.hospcode)] = d;
+  });
+
+  // ===== รวม =====
+  HOSP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    if(d){
+      sumA += Number(d.a) || 0;
+      sumB += Number(d.b) || 0;
+    }
+
+  });
+
+  let total = sumB > 0
+    ? (sumA / sumB * 100)
+    : 0;
+
+  labels.push("รวม");
+  values.push(total.toFixed(2));
+  colors.push("#444");
+
+
+  // ===== รายโรงพยาบาล =====
+  HOSP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    let a = d ? Number(d.a) || 0 : 0;
+    let b = d ? Number(d.b) || 0 : 0;
+
+    let percent = b > 0
+      ? (a / b * 100)
+      : 0;
+
+    labels.push(HOSP_MAP[code]);
+    values.push(percent.toFixed(2));
+
+    let isPass =
+      (target == 5)
+        ? percent < target
+        : percent >= target;
+
+    colors.push(
+      isPass ? PASS_COLOR : FAIL_COLOR
+    );
+
+  });
+
+
+  new Chart(ctx,{
+    type:"bar",
+
+    data:{
+      labels:labels,
+      datasets:[{
+        data:values,
+        backgroundColor:colors
+      }]
+    },
+
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+
+      plugins:{
+        legend:{display:false},
+
+        datalabels:{
+          anchor:"end",
+          align:"top",
+          formatter:(v)=> v+"%"
+        },
+
+        annotation:{
+          annotations:{
+            line1:{
+              type:"line",
+              yMin:target,
+              yMax:target,
+              borderColor:"#999",
+              borderWidth:2,
+              borderDash:[6,6]
+            }
+          }
+        }
+      },
+
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{
+            callback:(v)=> v+"%"
+          }
+        }
+      }
+    }
+  });
+
+}
+
+
+function renderChartMultiCUP(data, title, target, index){
+
+  let ctx = document.getElementById("chart" + index);
+  if(!ctx) return;
+
+  let labels = [];
+  let values = [];
+  let colors = [];
+
+  let sumA = 0;
+  let sumB = 0;
+
+  let dataMap = {};
+
+  data.forEach(d=>{
+    dataMap[String(d.hospcode)] = d;
+  });
+
+
+  // ===== รวมจังหวัด =====
+  CUP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    if(d){
+      sumA += Number(d.a) || 0;
+      sumB += Number(d.b) || 0;
+    }
+
+  });
+
+  let total = sumB > 0
+    ? (sumA / sumB * 100)
+    : 0;
+
+  labels.push("รวม");
+  values.push(total.toFixed(2));
+  colors.push("#444");
+
+
+  // ===== ราย CUP =====
+  CUP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    let a = d ? Number(d.a) || 0 : 0;
+    let b = d ? Number(d.b) || 0 : 0;
+
+    let percent = b > 0
+      ? (a / b * 100)
+      : 0;
+
+    labels.push(CUP_MAP[code]);
+    values.push(percent.toFixed(2));
+
+    let isPass = percent >= target;
+
+    colors.push(
+      isPass ? PASS_COLOR : FAIL_COLOR
+    );
+
+  });
+
+
+  new Chart(ctx,{
+    type:"bar",
+
+    data:{
+      labels:labels,
+      datasets:[{
+        data:values,
+        backgroundColor:colors
+      }]
+    },
+
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+
+      plugins:{
+        legend:{display:false},
+
+        datalabels:{
+          anchor:"end",
+          align:"top",
+          formatter:(v)=> v+"%"
+        },
+
+        annotation:{
+          annotations:{
+            line1:{
+              type:"line",
+              yMin:target,
+              yMax:target,
+              borderColor:"#999",
+              borderWidth:2,
+              borderDash:[6,6]
+            }
+          }
+        }
+      },
+
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{
+            callback:(v)=> v+"%"
+          }
+        }
+      }
+    }
+  });
+
+}
+  
 
 // ====== POPUP ======
 function showMessage(text){
@@ -2177,433 +2410,6 @@ function showKPIView(mode){
     document.getElementById("kpiAll").style.display="none";
     document.getElementById("kpiSingle").style.display="block";
   }
-
-}
-
-//โชว์กราฟทั้งหมด
-function loadAllKPI(){
-
-  console.log("LOAD ALL KPI CALLED 🔥");
-
-  summaryRendered = false;
-
-  summaryHTML = "";
-  passList = [];
-  failList = [];
-
-  let container = document.getElementById("kpiAll");
-  container.innerHTML = "";
-
-  let count = 0;
-  let total = KPI_LIST.length + 1;
-
-  container.style.display = "flex";
-  container.style.flexWrap = "wrap";
-  container.style.gap = "20px";
-
-
-  // =====================================================
-  // ===== สร้าง DOM ของกราฟ KPI ทั้ง 7 ตัว ============
-  // =====================================================
-
-  KPI_LIST.forEach((kpi, index)=>{
-
-    let div = document.createElement("div");
-
-    div.style.background = "white";
-    div.style.padding = "15px";
-    div.style.borderRadius = "12px";
-    div.className = "kpi-card";
-
-    div.innerHTML = `
-      <h3 style="font-size:16px;margin-bottom:10px;">
-        ${kpi.title}
-      </h3>
-
-      <div style="height:220px;">
-        <canvas id="chart${index}"></canvas>
-      </div>
-    `;
-
-    container.appendChild(div);
-
-  });
-
-
-  // =====================================================
-  // ===== KPI API =======================================
-  // =====================================================
-
-  KPI_LIST.forEach((kpi, index)=>{
-
-    let url;
-
-
-    // ===== 3 KPI ปีละครั้ง : HDC แบบ CUP =====
-    if(isCUPKPI(kpi.table)){
-
-      url =
-        BASE_URL +
-        "?action=getMOPHKPICUP&table=" +
-        encodeURIComponent(kpi.table);
-
-    }
-
-
-    // ===== 4 KPI ตรวจซ้ำ 90 วัน : HDC รายโรงพยาบาล =====
-    else{
-
-      url =
-        BASE_URL +
-        "?action=getMOPHKPI&table=" +
-        encodeURIComponent(kpi.table);
-
-    }
-
-
-    fetch(url)
-
-      .then(res => res.json())
-
-      .then(function(data){
-
-        console.log(
-          isCUPKPI(kpi.table)
-            ? "CUP KPI:"
-            : "HOSPITAL KPI:",
-          kpi.table,
-          data
-        );
-
-
-        // ===== เลือกชนิดกราฟ =====
-
-        if(isCUPKPI(kpi.table)){
-
-          // 3 ตัวปีละครั้ง → ราย CUP
-          renderChartMultiCUP(
-            data,
-            kpi.title,
-            kpi.target,
-            index
-          );
-
-        }else{
-
-          // 4 ตัว 90 วัน → รายโรงพยาบาล
-          renderChartMulti(
-            data,
-            kpi.title,
-            kpi.target,
-            index
-          );
-
-        }
-
-
-        // ===== Summary Dashboard =====
-
-        renderSummary(
-          data,
-          kpi.title,
-          kpi.target,
-          kpi.table
-        );
-
-
-        count++;
-
-        if(count === total){
-          renderSummaryDashboard();
-        }
-
-      })
-
-      .catch(err=>{
-
-        console.error(
-          "KPI error:",
-          kpi.table,
-          err
-        );
-
-        // ✅ ถึง KPI ตัวใดตัวหนึ่ง error
-        // ก็ไม่ให้ Summary ค้างตลอดไป
-        count++;
-
-        if(count === total){
-          renderSummaryDashboard();
-        }
-
-      });
-
-  });
-
-
-  // =====================================================
-  // ===== CUSTOM SUMMARY ================================
-  // =====================================================
-
-  fetch(
-    BASE_URL +
-    "?action=getCustomKPI"
-  )
-
-  .then(res => res.json())
-
-  .then(function(data){
-
-    renderCustomSummaryFromSheet(data);
-
-    count++;
-
-    if(count === total){
-      renderSummaryDashboard();
-    }
-
-  })
-
-  .catch(err=>{
-
-    console.error(
-      "CUSTOM SUMMARY error:",
-      err
-    );
-
-    count++;
-
-    if(count === total){
-      renderSummaryDashboard();
-    }
-
-  });
-
-
-  // =====================================================
-  // ===== CT RATIO ======================================
-  // =====================================================
-
-  let ctDiv = document.createElement("div");
-
-  ctDiv.style.background = "white";
-  ctDiv.style.padding = "15px";
-  ctDiv.style.borderRadius = "12px";
-  ctDiv.className = "kpi-card";
-
-  ctDiv.innerHTML = `
-    <h3 style="font-size:16px;margin-bottom:10px;">
-      Top Ward C:T Ratio สูงสุด
-    </h3>
-
-    <div
-      id="ctRatioAllMeta"
-      style="
-        font-size:12px;
-        color:#666;
-        margin-bottom:8px;
-      ">
-    </div>
-
-    <div style="height:220px;">
-      <canvas id="ctRatioAllChart"></canvas>
-    </div>
-  `;
-
-  container.appendChild(ctDiv);
-
-
-  fetch(
-    BASE_URL +
-    "?action=getCtRatio"
-  )
-
-  .then(res => res.json())
-
-  .then(renderCtRatioAllChart)
-
-  .catch(err=>{
-    console.error(
-      "CT RATIO error:",
-      err
-    );
-  });
-
-
-  // =====================================================
-  // ===== CUSTOM GRAPH ==================================
-  // =====================================================
-
-  let div = document.createElement("div");
-
-  div.style.background = "white";
-  div.style.padding = "15px";
-  div.style.borderRadius = "12px";
-  div.className = "kpi-card";
-
-  div.innerHTML = `
-    <h3 style="font-size:16px;margin-bottom:10px;">
-      อัตราการรายงานผลตรวจได้ทันตามกำหนด
-    </h3>
-
-    <div style="height:220px;">
-      <canvas id="customAllChart"></canvas>
-    </div>
-  `;
-
-  container.appendChild(div);
-
-
-  fetch(
-    BASE_URL +
-    "?action=getCustomKPI"
-  )
-
-  .then(res => res.json())
-
-  .then(function(data){
-
-    const monthOrder = {
-      "มค":1,
-      "กพ":2,
-      "มีค":3,
-      "เมย":4,
-      "พค":5,
-      "มิย":6,
-      "กค":7,
-      "สค":8,
-      "กย":9,
-      "ตค":10,
-      "พย":11,
-      "ธค":12
-    };
-
-
-    data = data.map(d=>({
-
-      monthRaw: (d.month || "").trim(),
-      month: cleanMonth(d.month),
-      year: Number(d.year),
-      value: Number(d.value)
-
-    }));
-
-
-    data.sort((a,b)=>{
-
-      return (
-        (a.year - b.year) ||
-        (monthOrder[a.month] - monthOrder[b.month])
-      );
-
-    });
-
-
-    let labels = [];
-    let values = [];
-
-
-    data.forEach(d=>{
-
-      labels.push(
-        d.monthRaw + " " + d.year
-      );
-
-      values.push(
-        d.value
-      );
-
-    });
-
-
-    new Chart(
-      document.getElementById("customAllChart"),
-      {
-
-        type:"line",
-
-        data:{
-
-          labels:labels,
-
-          datasets:[{
-
-            data:values,
-            borderWidth:2,
-            fill:false
-
-          }]
-
-        },
-
-
-        options:{
-
-          responsive:true,
-          maintainAspectRatio:false,
-
-          plugins:{
-
-            legend:{
-              display:false
-            }
-
-          },
-
-          scales:{
-
-            y:{
-
-              min:95,
-              max:100,
-
-              ticks:{
-
-                callback:(v)=>{
-                  return v + "%";
-                }
-
-              }
-
-            }
-
-          }
-
-        }
-
-      }
-    );
-
-
-    setTimeout(()=>{
-
-      if(
-        sessionStorage.getItem("page")
-        === "home"
-      ){
-
-        renderSummaryDashboard();
-
-      }
-
-    },800);
-
-  })
-
-  .catch(err=>{
-
-    console.error(
-      "CUSTOM GRAPH error:",
-      err
-    );
-
-  });
-
-
-  // =====================================================
-  // ===== COST KPI ======================================
-  // =====================================================
-
-  loadCostKPI();
 
 }
 
