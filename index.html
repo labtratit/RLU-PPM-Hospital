@@ -3241,31 +3241,21 @@ if(pass){
 
 }
 //dashborad home
-function loadHomeSummary(){
+async function loadHomeSummary(){
+
+  console.log("HOME SUMMARY START");
 
   summaryRendered = false;
   passList = [];
   failList = [];
 
-  let count = 0;
-  let total = KPI_LIST.length + 1;
+  // ===== โหลด KPI 7 ตัวทีละตัว =====
+  for(let i = 0; i < KPI_LIST.length; i++){
 
-  function checkDone(){
-
-    if(count === total && !summaryRendered){
-
-      summaryRendered = true;
-      renderHomeDonut();
-
-    }
-
-  }
-
-  KPI_LIST.forEach((kpi)=>{
+    let kpi = KPI_LIST[i];
 
     let url;
 
-    // ===== 3 KPI แบบ CUP =====
     if(isCUPKPI(kpi.table)){
 
       url =
@@ -3273,10 +3263,7 @@ function loadHomeSummary(){
         "?action=getMOPHKPICUP&table=" +
         encodeURIComponent(kpi.table);
 
-    }
-
-    // ===== 4 KPI รายโรงพยาบาล =====
-    else{
+    }else{
 
       url =
         BASE_URL +
@@ -3285,54 +3272,92 @@ function loadHomeSummary(){
 
     }
 
-    fetch(url)
-      .then(res => res.json())
-      .then(function(data){
+    try{
 
-        renderSummary(
-          data,
-          kpi.title,
-          kpi.target,
-          kpi.table
-        );
+      console.log(
+        "HOME START:",
+        i,
+        kpi.table
+      );
 
-        count++;
-        checkDone();
+      let res = await fetch(url);
 
-      })
-      .catch(err=>{
+      if(!res.ok){
+        throw new Error("HTTP " + res.status);
+      }
 
-        console.error(err);
+      let data = await res.json();
 
-        count++;
-        checkDone();
+      // ถ้า Apps Script ส่ง error object มา
+      if(data && data.error){
+        throw new Error(data.error);
+      }
 
-      });
+      if(!Array.isArray(data)){
+        throw new Error("ข้อมูลไม่ใช่ Array");
+      }
 
-  });
+      renderSummary(
+        data,
+        kpi.title,
+        kpi.target,
+        kpi.table
+      );
+
+      console.log(
+        "HOME FINISH:",
+        i,
+        kpi.table
+      );
+
+      // เว้นจังหวะก่อนตัวถัดไป
+      await new Promise(resolve =>
+        setTimeout(resolve, 500)
+      );
+
+    }catch(err){
+
+      console.error(
+        "HOME KPI FAILED:",
+        kpi.table,
+        err
+      );
+
+      await new Promise(resolve =>
+        setTimeout(resolve, 1000)
+      );
+
+    }
+
+  }
+
 
   // ===== CUSTOM KPI =====
-  fetch(
-    BASE_URL +
-    "?action=getCustomKPI"
-  )
-  .then(res => res.json())
-  .then(function(data){
+  try{
+
+    let res = await fetch(
+      BASE_URL +
+      "?action=getCustomKPI"
+    );
+
+    let data = await res.json();
 
     renderCustomSummaryFromSheet(data);
 
-    count++;
-    checkDone();
+  }catch(err){
 
-  })
-  .catch(err=>{
+    console.error(
+      "CUSTOM HOME KPI FAILED:",
+      err
+    );
 
-    console.error(err);
+  }
 
-    count++;
-    checkDone();
 
-  });
+  // ===== วาด Donut หลังทุกอย่างจบ =====
+  renderHomeDonut();
+
+  console.log("HOME SUMMARY FINISH");
 
 }
 
