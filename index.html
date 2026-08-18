@@ -1476,6 +1476,20 @@ const HOSP_MAP = {
   "13816": "โรงพยาบาลเกาะช้าง"
 };
 
+  const CUP_ORDER = [
+  "2301","2302","2303","2304","2305","2306","2307"
+];
+
+const CUP_MAP = {
+  "2301": "CUP:โรงพยาบาลตราด",
+  "2302": "CUP:โรงพยาบาลคลองใหญ่",
+  "2303": "CUP:โรงพยาบาลเขาสมิง",
+  "2304": "CUP:โรงพยาบาลบ่อไร่",
+  "2305": "CUP:โรงพยาบาลแหลมงอบ",
+  "2306": "CUP:โรงพยาบาลเกาะกูด",
+  "2307": "CUP:โรงพยาบาลเกาะช้าง"
+};
+
 // ====== KPI LIST ======
 const KPI_LIST = [
 
@@ -1811,6 +1825,37 @@ function loadKPI(index){
 
   let kpi = KPI_LIST[index];
 
+  // ===== TEST: HbA1c 1 year ใช้ HDC CUP =====
+  if(kpi.table === "s_rlu_lab_hba1c_1year"){
+
+    fetch(
+      BASE_URL +
+      "?action=getMOPHKPICUP&table=" +
+      encodeURIComponent(kpi.table)
+    )
+    .then(res => res.json())
+    .then(function(data){
+
+      console.log("HBA1C CUP DATA:", data);
+
+      renderChartCUP(
+        data,
+        kpi.title,
+        kpi.target
+      );
+
+    })
+    .catch(err=>{
+      console.error(
+        "HbA1c CUP error:",
+        err
+      );
+    });
+
+    return;
+  }
+
+  // ===== ของเดิม: 3 KPI จาก CSV =====
   let typeMap = {
     "s_rlu_lab_hba1c_1year": "A1C",
     "s_rlu_lab_ldl_1year": "LDL",
@@ -1821,27 +1866,55 @@ function loadKPI(index){
 
   if(type){
 
-    fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getKPIData&type=" + type)
-      .then(res => res.json())
-      .then(function(data){
-        renderChart(data, kpi.title, kpi.target);
-      })
-      .catch(err => {
-        console.error("loadKPI error:", err);
-      });
+    fetch(
+      BASE_URL +
+      "?action=getKPIData&type=" +
+      type
+    )
+    .then(res => res.json())
+    .then(function(data){
+
+      renderChart(
+        data,
+        kpi.title,
+        kpi.target
+      );
+
+    })
+    .catch(err=>{
+      console.error(
+        "loadKPI error:",
+        err
+      );
+    });
 
   }else{
 
-    fetch("https://script.google.com/macros/s/AKfycby9IipNHREUA577mNKaattG8rudm2Wgs21FZFjL1EvBBOzJt3oS4Dq1eZgkyhNJLzx6NA/exec?action=getMOPHKPI&table=" + kpi.table)
-      .then(res => res.json())
-      .then(function(data){
-        renderChart(data, kpi.title, kpi.target);
-      })
-      .catch(err => {
-        console.error("loadKPI error:", err);
-      });
+    // ===== 4 KPI 90 วัน =====
+    fetch(
+      BASE_URL +
+      "?action=getMOPHKPI&table=" +
+      encodeURIComponent(kpi.table)
+    )
+    .then(res => res.json())
+    .then(function(data){
+
+      renderChart(
+        data,
+        kpi.title,
+        kpi.target
+      );
+
+    })
+    .catch(err=>{
+      console.error(
+        "loadKPI error:",
+        err
+      );
+    });
 
   }
+
 }
 
 function uploadKPI(type){
@@ -2013,6 +2086,124 @@ colors.push(isPass ? PASS_COLOR : FAIL_COLOR);
     }
 
   });
+
+}
+
+  function renderChartCUP(data, title, target){
+
+  let labels = [];
+  let values = [];
+  let colors = [];
+
+  let sumA = 0;
+  let sumB = 0;
+
+  let dataMap = {};
+
+  data.forEach(d=>{
+    dataMap[String(d.hospcode)] = d;
+  });
+
+  // ===== รวมทั้งจังหวัด =====
+  CUP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    if(d){
+      sumA += Number(d.a) || 0;
+      sumB += Number(d.b) || 0;
+    }
+
+  });
+
+  let total = sumB > 0
+    ? (sumA / sumB * 100)
+    : 0;
+
+  labels.push("รวม");
+  values.push(total.toFixed(2));
+  colors.push("#444");
+
+  // ===== ราย CUP =====
+  CUP_ORDER.forEach(code=>{
+
+    let d = dataMap[code];
+
+    let a = d ? Number(d.a) || 0 : 0;
+    let b = d ? Number(d.b) || 0 : 0;
+
+    let percent = b > 0
+      ? (a / b * 100)
+      : 0;
+
+    labels.push(CUP_MAP[code]);
+    values.push(percent.toFixed(2));
+
+    // KPI 1 year ต้อง >= 70
+    let isPass = percent >= target;
+
+    colors.push(
+      isPass ? PASS_COLOR : FAIL_COLOR
+    );
+
+  });
+
+  if(chart){
+    chart.destroy();
+  }
+
+  chart = new Chart(
+    document.getElementById("myChart"),
+    {
+      type:"bar",
+
+      data:{
+        labels:labels,
+        datasets:[{
+          data:values,
+          backgroundColor:colors
+        }]
+      },
+
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+
+        plugins:{
+          legend:{display:false},
+
+          datalabels:{
+            anchor:"end",
+            align:"top",
+            formatter:(v)=> v+"%",
+            font:{weight:"bold"}
+          },
+
+          annotation:{
+            annotations:{
+              line1:{
+                type:"line",
+                yMin:target,
+                yMax:target,
+                borderColor:"#999",
+                borderWidth:2,
+                borderDash:[6,6]
+              }
+            }
+          }
+        },
+
+        scales:{
+          y:{
+            beginAtZero:true,
+            ticks:{
+              callback:(v)=> v+"%"
+            }
+          }
+        }
+      }
+    }
+  );
 
 }
 
